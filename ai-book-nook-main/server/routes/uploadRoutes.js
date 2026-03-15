@@ -27,4 +27,27 @@ router.post('/book-image', protect, admin, upload.single('image'), (req, res) =>
     }
 });
 
+// @desc    Upload category icon
+// @route   POST /api/upload/category-icon
+// @access  Private/Admin
+router.post('/category-icon', protect, admin, upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            res.status(400);
+            throw new Error('No file uploaded');
+        }
+
+        const filePath = `/uploads/categories/${req.file.filename}`;
+
+        res.json({
+            message: 'Icon uploaded successfully',
+            filePath: filePath
+        });
+    } catch (error) {
+        res.status(400).json({
+            message: error.message || 'File upload failed'
+        });
+    }
+});
+
 export default router;

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Star, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Minus, Plus, ChevronLeft } from 'lucide-react';
+import { Star, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, Minus, Plus, ChevronLeft, BookOpen } from 'lucide-react';
+
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 
@@ -25,7 +26,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useTranslation, Trans } from 'react-i18next';
 import { getLocalized } from '@/utils/localization';
-import { getImageUrl } from '@/utils/imageUrl';
+import { getImageFallbackChain } from '@/utils/imageUrl';
 
 const BookDetail = () => {
   const { t, i18n } = useTranslation();
@@ -42,6 +43,11 @@ const BookDetail = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [loadingReview, setLoadingReview] = useState(false);
+
+  // Image fallback state — populated once `book` is loaded
+  const [imgIndex, setImgIndex] = useState(0);
+  const [imgFailed, setImgFailed] = useState(false);
+  const [imgChain, setImgChain] = useState<string[]>([]);
 
   // Extend Book type locally to include reviews if not in main type
   interface Review {
@@ -93,6 +99,10 @@ const BookDetail = () => {
         // Map _id to id
         data.id = data._id;
         setBook(data);
+        // Build fallback chain once book is loaded
+        setImgChain(getImageFallbackChain(data.image_url, data.coverImage, data.isbn));
+        setImgIndex(0);
+        setImgFailed(false);
 
         // Fetch related books
         const relatedRes = await api.get(`/api/books?category=${data.category}`);
@@ -162,19 +172,29 @@ const BookDetail = () => {
             >
               <div className="sticky top-24">
                 <div className="relative aspect-[3/4] max-w-md mx-auto rounded-xl overflow-hidden shadow-elevated">
-                  <img
-                    src={getImageUrl(book.image_url || book.coverImage)}
-                    alt={getLocalized(book, 'title', i18n.language)}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      if (book.image_url && target.src === getImageUrl(book.image_url)) {
-                        target.src = getImageUrl(book.coverImage);
-                      } else if (!target.src.includes('placeholder-book.jpg')) {
-                        target.src = '/images/placeholder-book.jpg';
-                      }
-                    }}
-                  />
+                  {imgFailed || imgChain.length === 0 ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted text-muted-foreground gap-3 p-6">
+                      <div className="bg-muted-foreground/10 rounded-full p-5">
+                        <BookOpen className="h-14 w-14 opacity-30" />
+                      </div>
+                      <span className="text-sm font-medium opacity-50 text-center">{getLocalized(book, 'title', i18n.language)}</span>
+                    </div>
+                  ) : (
+                    <img
+                      key={imgIndex}
+                      src={imgChain[imgIndex]}
+                      alt={getLocalized(book, 'title', i18n.language)}
+                      className="w-full h-full object-contain bg-secondary/10"
+                      onError={() => {
+                        const next = imgIndex + 1;
+                        if (next < imgChain.length) {
+                          setImgIndex(next);
+                        } else {
+                          setImgFailed(true);
+                        }
+                      }}
+                    />
+                  )}
                   {/* Badges */}
                   <div className="absolute top-4 left-4 flex flex-col gap-2">
                     {book.bestseller && (
@@ -200,7 +220,7 @@ const BookDetail = () => {
                   to={`/books?category=${book.category.toLowerCase()}`}
                   className="text-sm text-primary font-medium uppercase tracking-wider hover:underline"
                 >
-                  {t(`categories.${book.category.toLowerCase()}`) || getLocalized(book, 'category', i18n.language)}
+                  {(() => { const catKey = `categories.${book.category.toLowerCase().replace(/\s+/g, '-')}`; return i18n.exists(catKey) ? t(catKey) : book.category; })()}
                 </Link>
               </div>
 
@@ -367,19 +387,36 @@ const BookDetail = () => {
                 </TabsContent>
                 <TabsContent value="details" className="pt-4">
                   <dl className="grid grid-cols-2 gap-4">
-                    {[
-                      { label: t('bookDetail.details.isbn'), value: book.isbn },
-                      { label: t('bookDetail.details.pages'), value: book.pages },
-                      { label: t('bookDetail.details.language'), value: t(`data.language.${book.language}`) || book.language },
-                      { label: t('bookDetail.details.published'), value: new Date(book.publishedDate).toLocaleDateString() },
-                      { label: t('bookDetail.details.category'), value: t(`categories.${book.category.toLowerCase()}`) || book.category },
-                      { label: t('bookDetail.details.genre'), value: t(`data.genre.${book.genre}`) || book.genre },
-                    ].map((detail) => (
-                      <div key={detail.label}>
-                        <dt className="text-sm text-muted-foreground">{detail.label}</dt>
-                        <dd className="font-medium">{detail.value}</dd>
-                      </div>
-                    ))}
+                    {(() => {
+                      const isValidValue = (v: any) => v !== null && v !== undefined && v !== "";
+                      const isValidDate = (d: any) => {
+                        if (!d || d === "Invalid Date") return false;
+                        const date = new Date(d);
+                        return !isNaN(date.getTime());
+                      };
+
+                      const pubDate = book.publishedDate || (book as any).published_date;
+
+                      const details = [
+                        isValidValue(book?.isbn) && { label: t('bookDetail.details.isbn'), value: book.isbn },
+                        isValidValue(book?.pages) && { label: t('bookDetail.details.pages'), value: book.pages },
+                        isValidValue(book?.language) && { label: t('bookDetail.details.language'), value: i18n.exists(`data.language.${book.language}`) ? t(`data.language.${book.language}`) : book.language },
+                        isValidDate(pubDate) && { label: t('bookDetail.details.published'), value: new Date(pubDate).toLocaleDateString() },
+                        isValidValue(book?.category) && { label: t('bookDetail.details.category'), value: (() => { const catKey = `categories.${book.category?.toLowerCase().replace(/\\s+/g, '-')}`; return i18n.exists(catKey) ? t(catKey) : book.category; })() },
+                        isValidValue(book?.genre) && { label: t('bookDetail.details.genre'), value: (() => { const genreKey = `data.genre.${book.genre}`; return i18n.exists(genreKey) ? t(genreKey) : book.genre; })() },
+                      ].filter(Boolean) as { label: string; value: React.ReactNode }[];
+
+                      if (details.length === 0) {
+                        return <p className="text-muted-foreground col-span-2">{t('bookDetail.details.noDetails', 'No additional details available.')}</p>;
+                      }
+
+                      return details.map((detail) => (
+                        <div key={detail.label}>
+                          <dt className="text-sm text-muted-foreground">{detail.label}</dt>
+                          <dd className="font-medium">{detail.value}</dd>
+                        </div>
+                      ));
+                    })()}
                   </dl>
                 </TabsContent>
                 <TabsContent value="reviews" className="pt-4 space-y-8">

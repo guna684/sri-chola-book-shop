@@ -41,9 +41,11 @@ const createCategory = asyncHandler(async (req, res) => {
         throw new Error('Category already exists');
     }
 
+    const generatedSlug = slug || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
     const category = await Category.create({
         name,
-        slug,
+        slug: generatedSlug,
         icon: icon || '📚',
         description
         // bookCount is computed dynamically, not stored

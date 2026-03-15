@@ -11,9 +11,9 @@ const sendEmail = async ({ to, subject, html }) => {
 
     // Check if keys are missing
     if (!serviceId || !templateId || !publicKey || !privateKey) {
-        console.warn('[EMAIL] EmailJS keys missing. Using Mock.');
-        console.log(`[MOCK EMAIL] To: ${to}, Subject: ${subject}`);
-        return Promise.resolve({ response: 'Mock success' });
+        const errorMsg = '[EMAIL] EmailJS keys missing. Set them in .env file.';
+        console.error(errorMsg);
+        throw new Error(errorMsg);
     }
 
     try {
@@ -34,9 +34,9 @@ const sendEmail = async ({ to, subject, html }) => {
         return { success: true, data: response.data };
 
     } catch (error) {
-        console.error('[EMAIL] EmailJS Error:', error.response?.data || error.message);
-        // Don't throw to avoid crashing checkout
-        return { success: false, error: error.message };
+        const errorDetails = error.response?.data || error.message;
+        console.error('[EMAIL] EmailJS Error:', errorDetails);
+        throw new Error(`Email sending failed: ${typeof errorDetails === 'string' ? errorDetails : JSON.stringify(errorDetails)}`);
     }
 };
 

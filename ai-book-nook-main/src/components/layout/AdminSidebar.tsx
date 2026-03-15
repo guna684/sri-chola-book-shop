@@ -12,6 +12,8 @@ import {
     Tags,
     ShoppingBag,
     ChevronRight,
+    RotateCcw,
+    Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -26,16 +28,18 @@ const AdminSidebar = () => {
         { name: t('admin.sidebar.products'), path: '/admin/productlist', icon: Package },
         { name: t('admin.sidebar.categories'), path: '/admin/categorylist', icon: Tags },
         { name: t('admin.sidebar.orders'), path: '/admin/orderlist', icon: ShoppingBag },
+        { name: t('admin.sidebar.refundManagement'), path: '/admin/refunds', icon: RotateCcw },
         { name: t('admin.sidebar.users'), path: '/admin/userlist', icon: Users },
         { name: t('admin.sidebar.messages'), path: '/admin/messagelist', icon: MessageSquare },
         { name: t('admin.sidebar.promoCodes'), path: '/admin/promocodes', icon: Tag },
         { name: t('admin.sidebar.bannerManagement'), path: '/admin/banner', icon: LayoutTemplate },
         { name: t('admin.sidebar.marketing'), path: '/admin/newsletter', icon: Megaphone },
+        { name: t('admin.sidebar.settings'), path: '/admin/settings', icon: Settings },
     ];
 
     return (
-        <aside className="w-64 bg-card/80 backdrop-blur-xl border-r border-border h-[calc(100vh-4rem)] sticky top-16 hidden lg:block overflow-y-auto shadow-sm">
-            <div className="p-6 space-y-2">
+        <aside className="w-64 bg-card/80 backdrop-blur-xl border-r border-border h-[calc(100vh-4rem)] sticky top-16 hidden lg:flex flex-col shadow-sm">
+            <div className="flex-1 overflow-y-auto p-6 space-y-2">
                 <div className="mb-6 px-2">
                     <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('admin.sidebar.management')}</h2>
                 </div>
@@ -72,7 +76,7 @@ const AdminSidebar = () => {
                 })}
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="p-6 border-t border-border/50">
                 <div className="bg-gradient-to-br from-primary/10 to-transparent p-4 rounded-xl border border-primary/10">
                     <p className="text-xs text-muted-foreground mb-1">{t('admin.sidebar.adminPortal')}</p>
                     <p className="text-sm font-bold text-primary">Sri Chola Book Shop v1.0</p>

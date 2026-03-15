@@ -1,0 +1,9 @@
+Title: Wings of Fire
+Cover: /uploads/book-covers/book_gb_69b12af7105b6840233e8c36_1773221175876.jpg
+---
+Title: The Diary of a Young Girl
+Cover: /uploads/book-covers/book_gb_69b12af8105b6840233e8c38_1773221178324.jpg
+---
+Title: Long Walk to Freedom
+Cover: https://m.media-amazon.com/images/I/71y4fOG4HxL._SY466_.jpg
+---

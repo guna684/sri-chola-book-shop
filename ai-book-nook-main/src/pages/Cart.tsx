@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const Cart = () => {
   const { t } = useTranslation();
@@ -18,7 +19,8 @@ const Cart = () => {
   const navigate = useNavigate();
 
   const subtotal = getCartTotal();
-  const shipping = subtotal > 499 ? 0 : 49;
+  const totalItemsCount = items.reduce((count, item) => count + item.quantity, 0);
+  const shipping = totalItemsCount * 50;
   const total = subtotal + shipping;
 
   if (items.length === 0) {
@@ -93,7 +95,7 @@ const Cart = () => {
                     {/* Book Image */}
                     <Link to={`/book/${item.book.id}`} className="shrink-0">
                       <img
-                        src={item.book.image_url || item.book.coverImage || '/images/placeholder-book.jpg'}
+                        src={getImageUrl(item.book.image_url || item.book.coverImage)}
                         alt={item.book.title}
                         className="w-20 h-28 md:w-24 md:h-32 object-cover rounded-lg"
                         onError={(e) => {
@@ -121,7 +123,7 @@ const Cart = () => {
                         <span className="text-lg font-bold text-foreground">
                           ₹{item.book.price}
                         </span>
-                        {item.book.originalPrice && (
+                        {item.book.originalPrice && item.book.originalPrice > item.book.price && (
                           <span className="text-sm text-muted-foreground line-through">
                             ₹{item.book.originalPrice}
                           </span>
@@ -210,19 +212,8 @@ const Cart = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t('cart.shipping')}</span>
-                    <span className="font-medium">
-                      {shipping === 0 ? (
-                        <span className="text-green-600">{t('cart.free')}</span>
-                      ) : (
-                        `₹${shipping}`
-                      )}
-                    </span>
+                    <span className="font-medium">₹{shipping}</span>
                   </div>
-                  {shipping > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('cart.addMore', { amount: 499 - subtotal })}
-                    </p>
-                  )}
                 </div>
 
                 <Separator className="my-6" />

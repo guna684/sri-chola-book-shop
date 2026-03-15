@@ -116,9 +116,39 @@ export const getDeliveredDateRangeFilter = (startDate, endDate, caseInsensitive 
     return getDeliveredFilter(dateFilter, caseInsensitive);
 };
 
+/**
+ * Get filter for dashboard overview (non-cancelled orders)
+ * This includes Pending, Processing, Confirmed, Packed, Shipped, Out for Delivery, and Delivered.
+ * Basically anything that isn't Cancelled.
+ * 
+ * @param {string} startDate - ISO date string
+ * @param {string} endDate - ISO date string
+ * @returns {Object} MongoDB query filter object
+ */
+export const getDashboardStatsFilter = (startDate, endDate) => {
+    let filter = {
+        status: { $ne: ORDER_STATUS.CANCELLED }
+    };
+
+    if (startDate || endDate) {
+        filter.createdAt = {};
+        if (startDate) {
+            filter.createdAt.$gte = new Date(startDate);
+        }
+        if (endDate) {
+            const endDateTime = new Date(endDate);
+            endDateTime.setHours(23, 59, 59, 999);
+            filter.createdAt.$lte = endDateTime;
+        }
+    }
+
+    return filter;
+};
+
 export default {
     ORDER_STATUS,
     getDeliveredFilter,
     isUsingDeliveredFilter,
-    getDeliveredDateRangeFilter
+    getDeliveredDateRangeFilter,
+    getDashboardStatsFilter
 };

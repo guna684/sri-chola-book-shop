@@ -18,3 +18,31 @@ export const getImageUrl = (imagePath: string | undefined): string => {
     // For static images (like /images/...), return as is
     return imagePath;
 };
+
+// Build a prioritised list of image URLs to try in order
+export const getImageFallbackChain = (
+    image_url?: string,
+    coverImage?: string,
+    isbn?: string
+): string[] => {
+    const urls: string[] = [];
+
+    if (image_url) urls.push(getImageUrl(image_url));
+    if (coverImage && coverImage !== image_url) urls.push(getImageUrl(coverImage));
+
+    // For missing images entirely, ensure we return at least a generic placeholder
+    if (urls.length === 0) {
+        urls.push('/images/placeholder-book.jpg');
+    }
+
+    if (isbn) {
+        const cleanIsbn = isbn.replace(/[-\s]/g, '');
+        urls.push(`https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg`);
+        urls.push(`https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg`);
+    }
+
+    // Always fallback to standard placeholder if all external links fail
+    urls.push('/images/placeholder-book.jpg');
+
+    return [...new Set(urls)]; // Remove any accidental duplicates
+};

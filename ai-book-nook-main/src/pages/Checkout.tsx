@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -15,6 +15,41 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import { useTranslation } from 'react-i18next';
 import PromoCodeInput from '@/components/checkout/PromoCodeInput';
+import { getImageUrl } from '@/utils/imageUrl';
+
+// Error boundary component
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('Checkout Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Layout>
+          <div className="container mx-auto px-4 py-20 text-center">
+            <h1 className="font-serif text-3xl font-bold text-foreground mb-4">Something went wrong</h1>
+            <p className="text-muted-foreground mb-6">There was an error loading the checkout page.</p>
+            <Link to="/cart">
+              <Button>Back to Cart</Button>
+            </Link>
+          </div>
+        </Layout>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 declare global {
   interface Window {
@@ -39,7 +74,8 @@ const Checkout = () => {
 
   const subtotal = getCartTotal();
   const discountAmount = appliedPromo ? appliedPromo.discount : 0;
-  const shipping = subtotal > 499 ? 0 : 49;
+  const totalItemsCount = items.reduce((count, item) => count + item.quantity, 0);
+  const shipping = totalItemsCount * 50; // ₹50 for each book
   const total = appliedPromo ? appliedPromo.finalAmount + shipping : subtotal + shipping;
 
   const handlePromoApplied = (promoData: {
@@ -117,7 +153,8 @@ const Checkout = () => {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-                orderId: createdOrder._id
+                orderId: createdOrder._id,
+                customer_email: session.customer_email || (document.getElementById('email') as HTMLInputElement).value
               }, orderConfig);
 
               toast.success(t('checkout.messages.success'));
@@ -130,8 +167,11 @@ const Checkout = () => {
             }
           },
           prefill: {
-            name: (document.getElementById('firstName') as HTMLInputElement).value + " " + (document.getElementById('lastName') as HTMLInputElement).value,
-            email: (document.getElementById('email') as HTMLInputElement).value,
+            name: session.customer_name || (
+              (document.getElementById('firstName') as HTMLInputElement).value + " " +
+              (document.getElementById('lastName') as HTMLInputElement).value
+            ),
+            email: session.customer_email || (document.getElementById('email') as HTMLInputElement).value,
             contact: (document.getElementById('phone') as HTMLInputElement).value
           },
           theme: {
@@ -169,12 +209,18 @@ const Checkout = () => {
   };
 
   if (items.length === 0) {
+    console.log('Cart is empty, showing empty cart message');
     return (
       <Layout>
         <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="font-serif text-3xl font-bold text-foreground mb-4">{t('checkout.empty')}</h1>
+          <h1 className="font-serif text-3xl font-bold text-foreground mb-4">
+            {t ? t('checkout.empty') : 'Your cart is empty'}
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            Add some books to your cart before proceeding to checkout.
+          </p>
           <Link to="/books">
-            <Button>{t('checkout.continue')}</Button>
+            <Button>Continue Shopping</Button>
           </Link>
         </div>
       </Layout>
@@ -231,27 +277,50 @@ const Checkout = () => {
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="phone">{t('checkout.fields.phone')}</Label>
-                      <Input id="phone" placeholder="+91 98765 43210" required />
+                      <Input id="phone" placeholder="+91 9486762192" required />
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="address">{t('checkout.fields.address')}</Label>
-                      <Input id="address" placeholder="123 Book Street" required />
+                      <Input 
+                        id="address" 
+                        placeholder="123 Book Street" 
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="city">{t('checkout.fields.city')}</Label>
-                      <Input id="city" placeholder="New Delhi" required />
+                      <Input 
+                        id="city" 
+                        placeholder="New Delhi" 
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state">{t('checkout.fields.state')}</Label>
-                      <Input id="state" placeholder="Delhi" required />
+                      <Input 
+                        id="state" 
+                        placeholder="Delhi" 
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="pincode">{t('checkout.fields.pincode')}</Label>
-                      <Input id="pincode" placeholder="110001" required />
+                      <Input 
+                        id="pincode" 
+                        placeholder="110001" 
+                        required 
+                        maxLength={6}
+                      />
                     </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="country">{t('checkout.fields.country')}</Label>
-                      <Input id="country" placeholder="India" defaultValue="India" required />
+                      <Input 
+                        id="country" 
+                        placeholder="India" 
+                        defaultValue="India" 
+                        required 
+                      />
                     </div>
                   </div>
                 </motion.div>
@@ -309,7 +378,7 @@ const Checkout = () => {
                     {items.map((item) => (
                       <div key={item.book.id} className="flex gap-3">
                         <img
-                          src={item.book.coverImage || '/images/placeholder-book.jpg'}
+                          src={getImageUrl(item.book.coverImage || item.book.image_url)}
                           alt={item.book.title}
                           className="w-12 h-16 object-cover rounded"
                           onError={(e) => {
@@ -356,7 +425,7 @@ const Checkout = () => {
                     )}
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{t('cart.shipping')}</span>
-                      <span>{shipping === 0 ? t('cart.free') : `₹${shipping}`}</span>
+                      <span className="font-semibold">₹{shipping}</span>
                     </div>
                   </div>
 
@@ -393,4 +462,10 @@ const Checkout = () => {
   );
 };
 
-export default Checkout;
+const CheckoutWithErrorBoundary = () => (
+  <ErrorBoundary>
+    <Checkout />
+  </ErrorBoundary>
+);
+
+export default CheckoutWithErrorBoundary;

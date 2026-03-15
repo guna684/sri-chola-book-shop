@@ -142,9 +142,9 @@ const Header = () => {
                   )}
                   {user.isAdmin && (
                     <>
-                      {/* Admin Links in Sidebar now, but handy to have Dashboard here */}
-                      <DropdownMenuItem onClick={() => navigate('/admin/dashboard')}>
-                        {t('auth.dashboard')}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate('/admin/dashboard')} className="font-semibold text-blue-600">
+                        🛠️ Admin Dashboard
                       </DropdownMenuItem>
                     </>
                   )}
@@ -160,12 +160,6 @@ const Header = () => {
                   <Button variant="outline" size="sm" className="gap-2">
                     <User className="h-4 w-4" />
                     {t('auth.signIn')}
-                  </Button>
-                </Link>
-
-                <Link to="/login" className="hidden md:block">
-                  <Button variant="default" size="sm">
-                    {t('auth.joinNow')}
                   </Button>
                 </Link>
               </>
@@ -233,9 +227,6 @@ const Header = () => {
                 <div className="flex gap-2 mt-4 pt-4 border-t border-border">
                   <Link to="/login" className="flex-1" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="outline" className="w-full">{t('auth.signIn')}</Button>
-                  </Link>
-                  <Link to="/login" className="flex-1" onClick={() => setIsMenuOpen(false)}>
-                    <Button className="w-full">{t('auth.joinNow')}</Button>
                   </Link>
                 </div>
               )}

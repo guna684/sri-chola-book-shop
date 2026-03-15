@@ -3,7 +3,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import api from '@/lib/axios';
 import { Loader2, AlertCircle, Trophy } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 const TopSellingChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: number; dateRange?: { start: string; end: string } }) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -33,7 +36,7 @@ const TopSellingChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: numbe
         return (
             <div className="h-[350px] flex flex-col items-center justify-center bg-card rounded-xl border border-border text-muted-foreground">
                 <AlertCircle className="h-10 w-10 mb-2 opacity-50" />
-                <p>No sales data yet to determine top sellers</p>
+                <p>{t('admin.dashboard.charts.topSellers.noData')}</p>
             </div>
         );
     }
@@ -44,7 +47,7 @@ const TopSellingChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: numbe
                 <div className="bg-popover border border-border p-3 rounded-lg shadow-lg max-w-[200px]">
                     <p className="text-sm font-medium mb-1 text-foreground truncate">{label}</p>
                     <div className="flex justify-between gap-4 text-xs">
-                        <span className="text-muted-foreground">Sold:</span>
+                        <span className="text-muted-foreground">{t('admin.dashboard.charts.topSellers.sold')}:</span>
                         <span className="font-bold text-foreground">{payload[0].value}</span>
                     </div>
                 </div>
@@ -57,9 +60,9 @@ const TopSellingChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: numbe
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-1">
                 <Trophy className="h-5 w-5 text-yellow-500" />
-                <h3 className="font-serif text-lg font-bold text-foreground">Top 5 Best Sellers</h3>
+                <h3 className="font-serif text-lg font-bold text-foreground">{t('admin.dashboard.charts.topSellers.title')}</h3>
             </div>
-            <p className="text-xs text-muted-foreground mb-6">Most popular books by quantity</p>
+            <p className="text-xs text-muted-foreground mb-6">{t('admin.dashboard.charts.topSellers.subtitle')}</p>
 
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -78,7 +81,7 @@ const TopSellingChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: numbe
                             interval={0}
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.2)' }} />
-                        <Bar dataKey="totalSold" radius={[0, 4, 4, 0]} barSize={20} name="Units Sold">
+                        <Bar dataKey="totalSold" radius={[0, 4, 4, 0]} barSize={20} name={t('admin.dashboard.charts.topSellers.unitsSold')}>
                             {data.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length] || '#4b5563'} />
                             ))}

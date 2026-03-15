@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import Category from './models/Category.js';
 
-dotenv.config();
+dotenv.config({ path: './server/.env' });
 
 const categories = [
     { name: 'Fiction', slug: 'fiction', icon: '📖', description: 'Fictional stories and novels', bookCount: 245 },
@@ -11,7 +11,7 @@ const categories = [
     { name: 'Mystery', slug: 'mystery', icon: '🔍', description: 'Mystery and thriller books', bookCount: 156 },
     { name: 'Romance', slug: 'romance', icon: '💕', description: 'Romantic stories and love tales', bookCount: 203 },
     { name: 'Science Fiction', slug: 'sci-fi', icon: '🚀', description: 'Futuristic and sci-fi adventures', bookCount: 134 },
-    { name: 'Self-Help', slug: 'self-help', icon: '✨', description: 'Personal development and growth', bookCount: 178 },
+    { name: 'Self-Improvement', slug: 'self-improvement', icon: '✨', description: 'Personal development and growth', bookCount: 178 },
     { name: 'Biography', slug: 'biography', icon: '👤', description: 'Life stories of notable people', bookCount: 112 },
     { name: "Children's", slug: 'childrens', icon: '🧸', description: 'Books for young readers', bookCount: 167 },
 ];

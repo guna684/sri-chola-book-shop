@@ -35,6 +35,7 @@ const HeroSection = () => {
   const { t } = useTranslation();
   const [banner, setBanner] = useState<BannerData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [siteStats, setSiteStats] = useState<{ totalBooks: number; totalAuthors: number; totalUsers: number } | null>(null);
 
   useEffect(() => {
     const fetchBanner = async () => {
@@ -43,17 +44,30 @@ const HeroSection = () => {
         setBanner(data);
       } catch (error) {
         console.error('Failed to fetch banner:', error);
-        // Fallback to default if API fails
       } finally {
         setLoading(false);
       }
     };
+
+    const fetchSiteStats = async () => {
+      try {
+        const { data } = await api.get('/api/books/stats');
+        setSiteStats(data);
+      } catch (error) {
+        console.error('Failed to fetch site stats:', error);
+      }
+    };
+
     fetchBanner();
+    fetchSiteStats();
   }, []);
 
-  // Use defaults if loading or no data, but preferably use the fetched data structure
-  // If loading, we can show a skeleton or just render defaults immediately to avoid flicker if SSR/SSG wasn't an option
-  // For now, we'll wait for loading to finish for "smooth" transition or just show defaults
+  // Format large numbers: e.g. 1500 -> "1.5K", 243 -> "243"
+  const formatCount = (n: number) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}K`;
+    return `${n}`;
+  };
 
   const displayBanner = banner || {
     title: t('hero.title'),
@@ -64,20 +78,23 @@ const HeroSection = () => {
       { text: t('hero.startExploring'), link: '/books', variant: 'hero', order: 1, isVisible: true },
       { text: t('hero.browseCategories'), link: '/categories', variant: 'paper', order: 2, isVisible: true }
     ],
-    counters: [
-      { label: 'Books', value: '50K', suffix: '+', isVisible: true },
-      { label: 'Authors', value: '10K', suffix: '+', isVisible: true },
-      { label: 'Readers', value: '500K', suffix: '+', isVisible: true }
-    ],
+    counters: [],
     isActive: true
   };
 
+  // Use real stats for counters unless the admin has set custom counter values in Banner Management
   const activeButtons = displayBanner.buttons
     ?.filter(b => b.isVisible)
     .sort((a, b) => a.order - b.order) || [];
 
-  const activeCounters = displayBanner.counters
-    ?.filter(c => c.isVisible) || [];
+  // Always show real stats from the database
+  const activeCounters = siteStats
+    ? [
+      { label: t('hero.stats.books'), value: formatCount(siteStats.totalBooks), suffix: '+' },
+      { label: t('hero.stats.authors'), value: formatCount(siteStats.totalAuthors), suffix: '+' },
+      { label: t('hero.stats.readers'), value: formatCount(siteStats.totalUsers), suffix: '+' },
+    ]
+    : [];
 
   return (
     <section className="relative min-h-[90vh] flex items-center bg-gradient-hero overflow-hidden">
@@ -151,7 +168,9 @@ const HeroSection = () => {
                  Check if it's the default key to preserve the Translation capability if backend returns "Welcome..." exactly?
                  If custom title is set, use it. If not, use translation.
                */}
-              {banner && banner.title !== "Discover Your Next Great Adventure" ? (
+              {banner && 
+               banner.title !== "Discover Your Next Great Adventure" && 
+               banner.title !== "Welcome to Sri Chola Book Shop" ? (
                 banner.title
               ) : (
                 <Trans i18nKey="hero.title" components={{ 1: <span className="text-gradient-gold" /> }} />
@@ -159,7 +178,9 @@ const HeroSection = () => {
             </h1>
 
             <p className="text-lg md:text-xl text-paper/70 mb-8 max-w-xl mx-auto lg:mx-0">
-              {banner && banner.subtitle !== "Explore millions of books from bestsellers to rare finds. Let our AI assistant help you discover your perfect read." ? (
+              {banner && 
+               banner.subtitle !== "Explore millions of books from bestsellers to rare finds. Let our AI assistant help you discover your perfect read." &&
+               banner.subtitle !== "Discover a world of knowledge and imagination" ? (
                 banner.subtitle
               ) : (
                 t('hero.description')

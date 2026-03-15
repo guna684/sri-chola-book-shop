@@ -27,6 +27,33 @@ const authUser = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Auth admin & get token (admin-only login)
+// @route   POST /api/users/admin-login
+// @access  Public
+const authAdmin = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (user && (await user.matchPassword(password))) {
+        if (!user.isAdmin) {
+            res.status(403);
+            throw new Error('Access denied: Not an administrator');
+        }
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isAdmin: user.isAdmin,
+            address: user.address,
+            token: generateToken(user._id),
+        });
+    } else {
+        res.status(401);
+        throw new Error('Invalid email or password');
+    }
+});
+
 // @desc    Register a new user
 // @route   POST /api/users
 // @access  Public
@@ -225,12 +252,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
             message: 'OTP sent to your email. Please check your inbox.'
         });
     } catch (error) {
+        console.error('Forgot Password Email error:', error.message);
         user.resetPasswordOTP = undefined;
         user.resetPasswordOTPExpire = undefined;
         await user.save();
 
         res.status(500);
-        throw new Error('Email could not be sent. Please try again later.');
+        throw new Error(`Email could not be sent: ${error.message}. Please try again later.`);
     }
 });
 
@@ -393,6 +421,7 @@ const checkUserExists = asyncHandler(async (req, res) => {
 
 export {
     authUser,
+    authAdmin,
     registerUser,
     getUserProfile,
     updateUserProfile,

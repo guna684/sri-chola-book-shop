@@ -3,7 +3,10 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import api from '@/lib/axios';
 import { Loader2, AlertCircle } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 const CategorySalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: number; dateRange?: { start: string; end: string } }) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -33,7 +36,7 @@ const CategorySalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: nu
         return (
             <div className="h-[350px] flex flex-col items-center justify-center bg-card rounded-xl border border-border text-muted-foreground">
                 <AlertCircle className="h-10 w-10 mb-2 opacity-50" />
-                <p>No category sales data</p>
+                <p>{t('admin.dashboard.charts.categoryVolume.noData')}</p>
             </div>
         );
     }
@@ -44,7 +47,7 @@ const CategorySalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: nu
                 <div className="bg-popover border border-border p-3 rounded-lg shadow-lg">
                     <p className="text-sm font-medium mb-1 text-foreground">{payload[0].name}</p>
                     <p className="text-sm font-bold text-primary">
-                        {payload[0].value} units sold
+                        {payload[0].value} {t('admin.dashboard.charts.categoryVolume.unitsSold')}
                     </p>
                 </div>
             );
@@ -54,8 +57,8 @@ const CategorySalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: nu
 
     return (
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="font-serif text-lg font-bold text-foreground mb-1">Category Sales Volume</h3>
-            <p className="text-xs text-muted-foreground mb-6">Units sold by book category</p>
+            <h3 className="font-serif text-lg font-bold text-foreground mb-1">{t('admin.dashboard.charts.categoryVolume.title')}</h3>
+            <p className="text-xs text-muted-foreground mb-6">{t('admin.dashboard.charts.categoryVolume.subtitle')}</p>
 
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">

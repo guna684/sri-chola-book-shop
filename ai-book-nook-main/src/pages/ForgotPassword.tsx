@@ -132,7 +132,7 @@ const ForgotPassword = () => {
                         <>
                             <div className="text-center mb-8">
                                 <h1 className="font-serif text-2xl font-bold text-foreground mb-2">
-                                    Enter OTP & New Password
+                                    Enter OTP and New Password
                                 </h1>
                                 <p className="text-muted-foreground">
                                     We sent a 6-digit code to <strong>{email}</strong>

@@ -40,10 +40,10 @@ const Categories = () => {
   return (
     <>
       <Helmet>
-        <title>{t('categorySection.title')} | Sri Chola Book Shop</title>
+        <title>{t('seo.categories.title')}</title>
         <meta
           name="description"
-          content="Explore our book categories including Fiction, Non-Fiction, Mystery, Romance, Science Fiction, and more at Sri Chola Book Shop."
+          content={t('seo.categories.description')}
         />
       </Helmet>
       <Layout>
@@ -103,20 +103,6 @@ const Categories = () => {
                         </div>
                       </div>
 
-                      {/* Sample Books */}
-                      {sampleBooks.length > 0 && (
-                        <div className="flex gap-3 mt-6">
-                          {sampleBooks.map((book) => (
-                            <div key={book.id} className="flex-1">
-                              <img
-                                src={book.coverImage}
-                                alt={book.title}
-                                className="w-full aspect-[3/4] object-cover rounded-lg shadow-soft group-hover:shadow-card transition-shadow"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </Link>
                   </motion.div>
                 );

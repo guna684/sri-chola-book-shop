@@ -8,6 +8,16 @@
     "search": {
         "placeholder": "Search books, authors..."
     },
+    "seo": {
+        "home": {
+            "title": "Sri Chola Book Shop - Discover Your Next Great Read | AI-Powered Book Store",
+            "description": "Explore millions of books with AI-powered recommendations. Find bestsellers, discover new authors, and shop securely at Sri Chola Book Shop."
+        },
+        "categories": {
+            "title": "Categories | Sri Chola Book Shop",
+            "description": "Explore our book categories including Fiction, Non-Fiction, Mystery, Romance, Science Fiction, and more at Sri Chola Book Shop."
+        }
+    },
     "auth": {
         "signIn": "Sign In",
         "joinNow": "Join Now",
@@ -19,7 +29,7 @@
         "myAccount": "My Account"
     },
     "common": {
-        "bookHaven": "sricholabookshop",
+        "bookHaven": "Sri Chola Book Shop",
         "cart": "Cart",
         "wishlist": "Wishlist",
         "addToCart": "Add to Cart",
@@ -67,9 +77,11 @@
         "mystery": "Mystery",
         "romance": "Romance",
         "sci-fi": "Science Fiction",
-        "self-help": "Self-Help",
+        "self-improvement": "Self-Improvement",
         "biography": "Biography",
-        "childrens": "Children's"
+        "childrens": "Children's",
+        "technology": "Technology",
+        "history": "History"
     },
     "categorySection": {
         "title": "Browse by Category",
@@ -133,7 +145,7 @@
         "summary": "Order Summary",
         "subtotal": "Subtotal",
         "shipping": "Shipping",
-        "free": "FREE",
+        "free": "₹50/book",
         "addMore": "Add ₹{{amount}} more for free shipping",
         "promoCode": "Promo Code",
         "promoPlaceholder": "Enter code",
@@ -171,7 +183,7 @@
         "formDescription": "Fill out the form and our team will get back to you within 24 hours.",
         "location": "Our Location",
         "phone": "Phone Support",
-        "phoneSub": "Mon-Fri from 9am to 6pm",
+        "phoneSub": "",
         "email": "Email Us",
         "emailSub": "We'll reply as soon as possible",
         "form": {
@@ -201,8 +213,8 @@
         "hurry": "Hurry! Only {{count}} left",
         "outOfStock": "Out of Stock",
         "features": {
-            "freeDelivery": "Free Delivery",
-            "ordersOver": "Orders over ₹499",
+            "freeDelivery": "Delivery",
+            "ordersOver": "₹50 for each book",
             "securePayment": "Secure Payment",
             "gateway": "Cashfree Gateway",
             "easyReturns": "Easy Returns",
@@ -270,6 +282,20 @@
             "Cancelled": "Cancelled",
             "Returned": "Returned",
             "Refunded": "Refunded"
+        },
+        "codCharge": {
+            "title": "COD Cancellation Charge",
+            "amount": "Charge Amount",
+            "status": "Charge Status",
+            "via": "Payment Via",
+            "payBy": "Pay By",
+            "paidOn": "Paid On",
+            "cancelledOn": "Cancelled On",
+            "remarks": "Remarks",
+            "pendingNote": "Pay ₹{{amount}} by {{date}}",
+            "paidNote": "✅ Charge paid on time — order successfully cancelled.",
+            "expiredNote": "🔄 Payment deadline passed — your order has resumed delivery as the charge was not paid in time.",
+            "waivedNote": "✅ Cancellation charge waived by admin — order cancelled with no charge."
         }
     },
     "data": {
@@ -288,7 +314,91 @@
             "Hard Science Fiction": "Hard Science Fiction",
             "Personal Finance": "Personal Finance",
             "Classic Literature": "Classic Literature",
-            "Fantasy": "Fantasy"
+            "Fantasy": "Fantasy",
+            "Gothic Mystery": "Gothic Mystery",
+            "Locked Room Mystery": "Locked Room Mystery",
+            "High-Concept Mystery": "High-Concept Mystery",
+            "Police Procedural": "Police Procedural",
+            "Historical Mystery": "Historical Mystery",
+            "Honkaku Mystery": "Honkaku Mystery",
+            "Literary Fiction": "Literary Fiction",
+            "Historical Fiction": "Historical Fiction",
+            "Mythological Fiction": "Mythological Fiction",
+            "Dystopian Fiction": "Dystopian Fiction",
+            "Magical Realism": "Magical Realism",
+            "Adventure Fiction": "Adventure Fiction",
+            "Post-Apocalyptic Fiction": "Post-Apocalyptic Fiction",
+            "Science Fiction": "Science Fiction",
+            "Fantasy Fiction": "Fantasy Fiction",
+            "Psychology": "Psychology",
+            "Memoir": "Memoir",
+            "Self-Improvement": "Self-Improvement",
+            "Politics": "Politics",
+            "True Crime": "True Crime",
+            "Philosophy": "Philosophy",
+            "Current Affairs": "Current Affairs",
+            "Technology": "Technology",
+            "Social Science": "Social Science",
+            "Science": "Science",
+            "Spirituality": "Spirituality",
+            "Leadership": "Leadership",
+            "Economics": "Economics",
+            "Time Travel": "Time Travel",
+            "Space Opera": "Space Opera",
+            "Post-Apocalyptic": "Post-Apocalyptic",
+            "Sci-Fi Thriller": "Sci-Fi Thriller",
+            "Epic Sci-Fi": "Epic Sci-Fi",
+            "Hard Sci-Fi": "Hard Sci-Fi",
+            "Cyberpunk": "Cyberpunk",
+            "Soft Sci-Fi": "Soft Sci-Fi",
+            "Classic Sci-Fi": "Classic Sci-Fi",
+            "Dystopian": "Dystopian",
+            "Comedy Sci-Fi": "Comedy Sci-Fi",
+            "Military Sci-Fi": "Military Sci-Fi",
+            "Sci-Fi Adventure": "Sci-Fi Adventure",
+            "Satirical Sci-Fi": "Satirical Sci-Fi",
+            "Sci-Fi Mystery": "Sci-Fi Mystery",
+            "Dark Academia": "Dark Academia",
+            "Historical Fantasy": "Historical Fantasy",
+            "Literary Sci-Fi": "Literary Sci-Fi",
+            "Speculative Thriller": "Speculative Thriller",
+            "Graphic Novel": "Graphic Novel",
+            "New Adult Romance": "New Adult Romance",
+            "Magical Realism Romance": "Magical Realism Romance",
+            "Paranormal Romance": "Paranormal Romance",
+            "Historical Romance": "Historical Romance",
+            "Fantasy Romance": "Fantasy Romance",
+            "Young Adult Romance": "Young Adult Romance",
+            "Sports Romance": "Sports Romance",
+            "Romantic Thriller": "Romantic Thriller",
+            "Picture Book": "Picture Book",
+            "Bedtime Story": "Bedtime Story",
+            "Beginning Reader": "Beginning Reader",
+            "Classic Fiction": "Classic Fiction",
+            "Science Fantasy": "Science Fantasy",
+            "Animal Story": "Animal Story",
+            "Fantasy Adventure": "Fantasy Adventure",
+            "Inspirational": "Inspirational",
+            "Inspirational Stories": "Inspirational Stories",
+            "Tactile Book": "Tactile Book",
+            "Humor": "Humor",
+            "Holiday Story": "Holiday Story",
+            "Adventure": "Adventure",
+            "Musical Story": "Musical Story",
+            "Communication": "Communication",
+            "Success": "Success",
+            "Personal Growth": "Personal Growth",
+            "Empowerment": "Empowerment",
+            "Creativity": "Creativity",
+            "Productivity": "Productivity",
+            "Hygge & Lifestyle": "Hygge & Lifestyle",
+            "Motivation": "Motivation",
+            "Health": "Health",
+            "Human Rights": "Human Rights",
+            "Business": "Business",
+            "Entertainment": "Entertainment",
+            "Art": "Art",
+            "Sports": "Sports"
         }
     },
     "checkout": {
@@ -334,6 +444,24 @@
         }
     },
     "admin": {
+        "common": {
+            "loading": "Loading...",
+            "back": "Back",
+            "cancel": "Cancel",
+            "optional": "Optional",
+            "create": "Create",
+            "add": "Add",
+            "update": "Update",
+            "save": "Save",
+            "edit": "Edit",
+            "delete": "Delete",
+            "saving": "Saving...",
+            "close": "Close",
+            "refresh": "Refresh",
+            "search": "Search",
+            "from": "From",
+            "to": "To"
+        },
         "sidebar": {
             "management": "Management",
             "dashboard": "Dashboard",
@@ -345,6 +473,8 @@
             "promoCodes": "Promo Codes",
             "bannerManagement": "Banner Management",
             "marketing": "Marketing",
+            "refundManagement": "Refund Management",
+            "settings": "Settings",
             "adminPortal": "Admin Portal"
         },
         "dashboard": {
@@ -360,6 +490,8 @@
             "visitOrders": "Visit the Orders page to manage and fulfill the latest customer orders.",
             "goToOrders": "Go to Orders",
             "trendingUp": "+4.5% from last week",
+            "deliveryPricing": "Delivery Pricing",
+            "deliveryPricingDesc": "Manage shipping costs and delivery prices",
             "dateFilter": {
                 "from": "From",
                 "to": "To",
@@ -378,28 +510,107 @@
                 "subtitle": "Comprehensive insights into your store performance",
                 "filterByCategory": "Filter by Category",
                 "allCategories": "All Categories"
+            },
+            "refreshSuccess": "Dashboard data refreshed",
+            "orderDataUpdated": "Dashboard updated with latest order data",
+            "charts": {
+                "topSellers": {
+                    "title": "Top 5 Best Sellers",
+                    "subtitle": "Most popular books by quantity",
+                    "noData": "No sales data yet to determine top sellers",
+                    "sold": "Sold",
+                    "unitsSold": "Units Sold"
+                },
+                "categoryVolume": {
+                    "title": "Category Sales Volume",
+                    "subtitle": "Units sold by book category",
+                    "noData": "No category sales data",
+                    "unitsSold": "units sold"
+                },
+                "revenueShare": {
+                    "title": "Revenue Share",
+                    "subtitle": "Earnings breakdown by genre",
+                    "noData": "No revenue data available"
+                },
+                "monthlyTrends": {
+                    "title": "Monthly Sales Trends",
+                    "subtitle": "Revenue and order volume over time",
+                    "noData": "No monthly trends data available",
+                    "revenue": "Revenue",
+                    "orders": "Orders"
+                },
+                "stockVsSales": {
+                    "title": "Supply vs Demand",
+                    "subtitle": "Inventory levels compared with sales volume",
+                    "sold": "Sold",
+                    "stock": "Stock",
+                    "unitsSold": "Units Sold",
+                    "inStock": "In Stock",
+                    "noData": "No comparative data available"
+                },
+                "revenueByProduct": {
+                    "title": "Top Revenue Products",
+                    "subtitle": "Highest earning books",
+                    "revenue": "Revenue",
+                    "unitsSold": "Units Sold",
+                    "noData": "No revenue data available"
+                },
+                "lowStock": {
+                    "title": "Low Stock Alerts",
+                    "subtitle": "Books with stock under {{threshold}} units",
+                    "items": "{{count}} items",
+                    "left": "{{count}} left",
+                    "allStocked": "All products well-stocked!",
+                    "noAlerts": "No low inventory alerts",
+                    "showingTop": "Showing top 50 low-stock items"
+                }
             }
         },
         "products": {
             "title": "Products",
-            "adminProducts": "Admin Products",
-            "createProduct": "Create Product",
-            "editProduct": "Edit Product",
-            "deleteConfirm": "Are you sure you want to delete this book?",
-            "sampleCreated": "Sample book created",
-            "deleteSuccess": "Book deleted successfully",
-            "fetchError": "Failed to fetch books",
-            "deleteError": "Failed to delete book",
-            "createError": "Failed to create book",
-            "updateSuccess": "Product updated successfully",
-            "updateError": "Failed to update product",
-            "table": {
-                "id": "ID",
-                "name": "NAME",
-                "price": "PRICE",
-                "category": "CATEGORY",
-                "author": "AUTHOR",
-                "actions": "ACTIONS"
+            "stats": {
+                "totalRevenue": "Total Revenue",
+                "totalOrders": "Total Orders",
+                "totalProducts": "Total Products",
+                "totalUsers": "Total Users"
+            },
+            "products": {
+                "title": "Admin Products",
+                "createProduct": "Create Product",
+                "editProduct": "Edit Product",
+                "deleteConfirm": "Are you sure you want to delete this product?",
+                "sampleCreated": "Product created successfully",
+                "deleteSuccess": "Product deleted successfully",
+                "fetchError": "Failed to fetch products",
+                "deleteError": "Failed to delete product",
+                "createError": "Failed to create product",
+                "updateSuccess": "Product updated successfully",
+                "updateError": "Failed to update product",
+                "searchPlaceholder": "Search books by name, author, or category...",
+                "table": {
+                    "id": "ID",
+                    "name": "NAME",
+                    "price": "PRICE",
+                    "stock": "STOCK",
+                    "category": "CATEGORY",
+                    "author": "AUTHOR",
+                    "actions": "ACTIONS"
+                }
+            },
+            "settings": {
+                "title": "Store Settings",
+                "subtitle": "Manage global configuration for your store",
+                "inventoryAlerts": "Inventory Alerts",
+                "lowStockLimit": "Low Stock Alert Limit",
+                "lowStockDesc": "Set the minimum stock threshold. Books with stock equal or under this value will appear in the low stock alerts.",
+                "units": "units",
+                "save": "Save Settings",
+                "messages": {
+                    "fetchError": "Failed to load settings",
+                    "negativeError": "Stock limit cannot be negative",
+                    "saveSuccess": "Settings saved successfully",
+                    "saveError": "Failed to save settings"
+                }
             },
             "form": {
                 "title": "Title",
@@ -408,21 +619,30 @@
                 "description": "Description",
                 "category": "Category",
                 "image": "Image URL",
+                "imageHint": "Static image path (optional). You can upload a file or use an image URL instead.",
                 "stock": "Stock",
                 "isbn": "ISBN",
                 "pages": "Pages",
                 "language": "Language",
                 "publisher": "Publisher",
                 "publishedDate": "Published Date",
-                "isBestseller": "Bestseller",
-                "featured": "Featured Product",
-                "discount": "Discount %"
+                "discount": "Discount %",
+                "uploadTitle": "Upload Book Image",
+                "uploadHint": "Upload a book cover image (JPEG, PNG, WebP, max 5MB). This will be stored on the server.",
+                "dynamicUrl": "Image URL (Dynamic)",
+                "dynamicUrlHint": "Optional: Enter a direct URL to the book cover image. This will override the default image.",
+                "preview": "Preview:",
+                "uploading": "Uploading image...",
+                "featuredProduct": "Featured Product",
+                "isBestseller": "Bestseller Product",
+                "genre": "Genre"
             },
             "update": "Update Product"
         },
         "categories": {
             "title": "Categories",
             "adminCategories": "Admin Categories",
+            "manage": "Manage Categories",
             "addCategory": "Add Category",
             "editCategory": "Edit Category",
             "deleteConfirm": "Are you sure you want to delete this category?",
@@ -437,11 +657,19 @@
             "noCategories": "No categories found. Start adding some!",
             "form": {
                 "name": "Name",
-                "description": "Description"
+                "namePlaceholder": "Enter category name",
+                "slug": "Slug",
+                "slugPlaceholder": "enter-category-slug",
+                "icon": "Icon",
+                "description": "Description",
+                "descPlaceholder": "Enter category description"
             },
             "table": {
                 "name": "NAME",
                 "description": "DESCRIPTION",
+                "slug": "SLUG",
+                "icon": "ICON",
+                "books": "BOOKS",
                 "actions": "ACTIONS"
             }
         },
@@ -458,12 +686,13 @@
             "updateError": "Failed to update status",
             "fetchError": "Failed to fetch orders",
             "table": {
-                "id": "ID",
-                "user": "USER",
+                "id": "ORDER ID",
+                "user": "CUSTOMER",
                 "date": "DATE",
                 "total": "TOTAL",
                 "status": "STATUS",
                 "paid": "PAID",
+                "codCharge": "COD CHARGE",
                 "actions": "ACTIONS",
                 "update": "Update"
             },
@@ -478,6 +707,26 @@
                 "cancelled": "Cancelled",
                 "returned": "Returned",
                 "refunded": "Refunded"
+            },
+            "codCharge": {
+                "manage": "Manage COD Cancellation Charge",
+                "summary": "Order Summary",
+                "orderId": "Order ID",
+                "customer": "Customer",
+                "total": "Order Total",
+                "cancelledOn": "Cancelled On",
+                "amount": "Cancellation Charge (₹)",
+                "status": "Charge Status",
+                "paidOn": "Paid On (date & time)",
+                "paidOnHint": "Leave blank to auto-set to now.",
+                "dueDate": "Cancellation Due Date",
+                "dueDateHint": "The window for the user to pay.",
+                "adminRemarks": "Admin Remarks",
+                "remarksPlaceholder": "e.g. Collected via UPI on 25-Feb-2026...",
+                "update": "Charge",
+                "saveSuccess": "COD cancellation charge updated",
+                "saveError": "Failed to update charge",
+                "statusUpdated": "Dashboard will refresh automatically"
             }
         },
         "users": {
@@ -531,6 +780,13 @@
                 "subject": "Subject",
                 "message": "Message"
             },
+            "template": {
+                "dear": "Dear {{name}},",
+                "thankYou": "Thank you for reaching out to Sri Chola Book Shop.",
+                "regards": "With regards,",
+                "supportTeam": "Sri Chola Book Shop Support Team",
+                "originalMessage": "Original Message from {{name}}:"
+            },
             "noMessages": "No messages found.",
             "confirmDelete": "Are you sure you want to delete this message?",
             "table": {
@@ -541,6 +797,35 @@
                 "status": "STATUS",
                 "actions": "ACTIONS"
             }
+        },
+        "banner": {
+            "title": "Banner Management",
+            "generalSettings": "General Settings",
+            "bannerTitle": "Banner Title",
+            "bannerTitlePlaceholder": "Enter banner title",
+            "subtitle": "Subtitle / Description",
+            "subtitlePlaceholder": "Enter subtitle or description",
+            "bgImageUrl": "Background Image URL",
+            "overlayOpacity": "Overlay Opacity",
+            "active": "Banner Active (Visible on Home Page)",
+            "actionButtons": "Action Buttons",
+            "addButton": "Add Button",
+            "noButtons": "No buttons configured.",
+            "buttonText": "Text",
+            "buttonLink": "Link",
+            "buttonVariant": "Variant",
+            "visible": "Visible",
+            "heroGold": "Hero (Gold)",
+            "paperWhite": "Paper (White)",
+            "primary": "Primary",
+            "outline": "Outline",
+            "statsCounters": "Statistics Counters",
+            "addCounter": "Add Counter",
+            "noCounters": "No counters configured.",
+            "counterLabel": "Label",
+            "counterValue": "Value",
+            "counterSuffix": "Suffix",
+            "loading": "Loading banner settings..."
         },
         "newsletter": {
             "title": "Newsletter",
@@ -612,55 +897,202 @@
                 "perUser": "Per User",
                 "expires": "Expires",
                 "minCart": "Min Cart",
-                "times": "time(s)"
+                "times": "time(s)",
+                "percentOff": "{{value}}% off",
+                "flatOff": "₹{{value}} off",
+                "max": "Max"
             },
             "warnings": {
                 "inactive": "This promo code is currently inactive",
                 "expired": "This promo code has expired",
                 "limitReached": "Usage limit reached"
             }
+        }
+    },
+    "refunds": {
+        "title": "Refund & Charge Management",
+        "subtitle": "Manage prepaid refunds and COD cancellation charges",
+        "refresh": "Refresh",
+        "prepaidTab": "Prepaid Refunds",
+        "codTab": "COD Charges",
+        "searchPlaceholder": "Search by order ID or customer…",
+        "filterStatus": "Filter by status",
+        "allStatus": "All Statuses",
+        "table": {
+            "orderId": "Order ID",
+            "customer": "Customer",
+            "orderAmt": "Order Amt",
+            "refundAmt": "Refund Amt",
+            "via": "Via",
+            "status": "Status",
+            "cancelledOn": "Cancelled On",
+            "actions": "Actions",
+            "view": "View",
+            "edit": "Edit",
+            "orderStatus": "Order Status",
+            "chargeAmt": "Charge Amt",
+            "chargeStatus": "Charge Status",
+            "paymentVia": "Payment Via",
+            "dueDate": "Due Date",
+            "paidOn": "Paid On",
+            "manage": "Manage",
+            "markPaid": "Mark Paid",
+            "waive": "Waive",
+            "forceCancel": "Force Cancel",
+            "forceContinue": "Force Continue",
+            "pending": "Pending",
+            "processed": "Processed",
+            "rejected": "Rejected",
+            "paid": "Paid",
+            "waived": "Waived",
+            "expired": "Expired"
         },
-        "profile": {
-            "title": "User Profile",
-            "personalInfo": "Personal Info",
-            "name": "Name",
-            "email": "Email Address",
-            "newPassword": "New Password",
-            "confirmPassword": "Confirm Password",
-            "leaveBlank": "Leave blank to keep current",
-            "confirmNew": "Confirm new password",
-            "shippingAddress": "Shipping Address",
-            "street": "Street Address",
-            "city": "City",
-            "state": "State",
-            "zip": "ZIP Code",
-            "country": "Country",
-            "update": "Update Profile",
-            "success": "Profile updated successfully",
-            "error": "Update failed",
-            "passwordMismatch": "Passwords do not match",
-            "placeholders": {
-                "street": "123 Main St"
+        "dialogs": {
+            "prepaidTitle": "Edit Refund Details",
+            "prepaidTitleLocked": "Refund Details (Locked)",
+            "lockedNote": "This refund has been processed and is locked for editing.",
+            "originalAmt": "Original Amount",
+            "cancelFee": "Cancellation Fee",
+            "refundAmtLabel": "Refund Amount (₹)",
+            "txnId": "Transaction ID",
+            "razorpayId": "Razorpay Payment ID",
+            "adminNotes": "Admin Notes",
+            "notesPlaceholder": "Internal notes about this refund…",
+            "close": "Close",
+            "save": "Save Changes",
+            "saving": "Saving…",
+            "codTitle": "Manage COD Cancellation Charge",
+            "email": "Email",
+            "orderTotal": "Order Total",
+            "dueDateLabel": "Cancellation Due Date",
+            "remarks": "Admin Remarks",
+            "remarksPlaceholder": "e.g. Collected via UPI or Waived for first cancellation…",
+            "dueNote": "The 48h window for the user to pay.",
+            "paidOnLabel": "Paid On (date & time)",
+            "autoSetNote": "Leave blank to auto-set to now."
+        },
+        "messages": {
+            "fetchError": "Failed to load orders",
+            "prepaidSuccess": "Refund updated successfully",
+            "prepaidError": "Failed to update refund",
+            "codSuccess": "COD charge updated successfully",
+            "codError": "Failed to update",
+            "markPaidSuccess": "Charge marked as Paid",
+            "markWaivedSuccess": "Charge marked as Waived",
+            "overrideCancel": "Charge waived & order cancelled",
+            "overrideContinue": "Order reverted to Processing",
+            "overrideError": "Override failed",
+            "noPrepaid": "No prepaid orders match the filter.",
+            "noCod": "No COD orders match the filter."
+        }
+    },
+    "profile": {
+        "title": "User Profile",
+        "personalInfo": "Personal Info",
+        "name": "Name",
+        "email": "Email Address",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm Password",
+        "leaveBlank": "Leave blank to keep current",
+        "confirmNew": "Confirm new password",
+        "shippingAddress": "Shipping Address",
+        "street": "Street Address",
+        "city": "City",
+        "state": "State",
+        "zip": "ZIP Code",
+        "country": "Country",
+        "update": "Update Profile",
+        "success": "Profile updated successfully",
+        "error": "Update failed",
+        "passwordMismatch": "Passwords do not match",
+        "placeholders": {
+            "street": "123 Main St"
+        }
+    },
+    "shipping": {
+        "title": "Shipping Information",
+        "deliveryOptions": {
+            "title": "Delivery Options",
+            "standard": {
+                "title": "Standard Shipping",
+                "days": "3-5 Business Days",
+                "price": "Free on orders over ₹500"
+            },
+            "express": {
+                "title": "Express Shipping",
+                "days": "1-2 Business Days",
+                "price": "₹100 flat rate"
             }
         },
-        "common": {
-            "loading": "Loading...",
-            "save": "Save",
-            "cancel": "Cancel",
-            "edit": "Edit",
-            "delete": "Delete",
-            "confirm": "Confirm",
-            "back": "Back",
-            "create": "Create",
-            "update": "Update",
-            "search": "Search",
-            "filter": "Filter",
-            "export": "Export",
-            "import": "Import",
-            "refresh": "Refresh",
-            "yes": "Yes",
-            "no": "No",
-            "add": "Add"
+        "processing": {
+            "title": "Order Processing",
+            "text": "Orders are processed within 24 hours of being placed. Orders placed on weekends or holidays will be processed the next business day. You will receive a confirmation email with tracking information once your order has shipped."
+        },
+        "international": {
+            "title": "International Shipping",
+            "text": "We currently do not offer international shipping. We only ship to addresses within India."
+        },
+        "tracking": {
+            "title": "Tracking Your Order",
+            "text": "You can track your order using the tracking number provided in your shipping confirmation email or by logging into your account and viewing your order history."
+        }
+    },
+    "returnPolicy": {
+        "title": "Return & Refund Policy",
+        "intro": "We want you to be completely satisfied with your purchase. If you're not happy with your order, we're here to help.",
+        "returns": {
+            "title": "Returns",
+            "text": "You have 30 calendar days to return an item from the date you received it. To be eligible for a return, your item must be unused and in the same condition that you received it. Your item must be in the original packaging."
+        },
+        "refunds": {
+            "title": "Refunds",
+            "text1": "Once we receive your item, we will inspect it and notify you that we have received your returned item. We will immediately notify you on the status of your refund after inspecting the item.",
+            "text2": "If your return is approved, we will initiate a refund to your credit card (or original method of payment). You will receive the credit within a certain amount of days, depending on your card issuer's policies."
+        },
+        "shipping": {
+            "title": "Shipping",
+            "text": "You will be responsible for paying for your own shipping costs for returning your item. Shipping costs are non-refundable. If you receive a refund, the cost of return shipping will be deducted from your refund."
+        },
+        "damaged": {
+            "title": "Damaged Items",
+            "text": "If you received a damaged product, please notify us immediately for assistance."
+        }
+    },
+    "privacyPolicy": {
+        "title": "Privacy Policy",
+        "lastUpdated": "Last updated: December 2024",
+        "sections": {
+            "s1": {
+                "title": "1. Information We Collect",
+                "text": "We collect information you provide directly to us, such as when you create an account, make a purchase, sign up for our newsletter, or contact us for support. This may include your name, email address, shipping address, payment information, and phone number."
+            },
+            "s2": {
+                "title": "2. How We Use Your Information",
+                "text": "We use the information we collect to:",
+                "list": [
+                    "Process your orders and payments.",
+                    "Send you order confirmations and shipping updates.",
+                    "Respond to your comments and questions.",
+                    "Send you newsletters and promotional offers (you can opt out at any time).",
+                    "Improve our website and customer service."
+                ]
+            },
+            "s3": {
+                "title": "3. Sharing of Information",
+                "text": "We do not sell your personal information. We may share your information with third-party service providers who help us operate our business, such as payment processors and shipping carriers. These providers have access to your information only to perform these tasks on our behalf."
+            },
+            "s4": {
+                "title": "4. Security",
+                "text": "We take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access, disclosure, alteration and destruction."
+            },
+            "s5": {
+                "title": "5. Cookies",
+                "text": "We use cookies to improve your experience on our site. You can set your browser to refuse all or some browser cookies, or to alert you when websites set or access cookies."
+            },
+            "s6": {
+                "title": "6. Contact Us",
+                "text": "If you have any questions about this Privacy Policy, please contact us at support@sricholabookshop.com."
+            }
         }
     }
 }

@@ -47,8 +47,8 @@ const subscribeToNewsletter = asyncHandler(async (req, res) => {
                 `
             });
         } catch (error) {
-            console.error('Email sending failed:', error);
-            // Don't fail the request if email fails, just continue
+            console.error('Newsletter Welcome Email failed to send:', error.message);
+            // We ignore welcome email failure for subscribers so they are still added to DB
         }
 
         res.status(201).json({

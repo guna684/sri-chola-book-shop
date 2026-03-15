@@ -3,7 +3,10 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import api from '@/lib/axios';
 import { Loader2, AlertCircle } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 const RevenueCategoryChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: number; dateRange?: { start: string; end: string } }) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -33,7 +36,7 @@ const RevenueCategoryChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: 
         return (
             <div className="h-[350px] flex flex-col items-center justify-center bg-card rounded-xl border border-border text-muted-foreground">
                 <AlertCircle className="h-10 w-10 mb-2 opacity-50" />
-                <p>No revenue data available</p>
+                <p>{t('admin.dashboard.charts.revenueShare.noData')}</p>
             </div>
         );
     }
@@ -54,8 +57,8 @@ const RevenueCategoryChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: 
 
     return (
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="font-serif text-lg font-bold text-foreground mb-1">Revenue Share</h3>
-            <p className="text-xs text-muted-foreground mb-6">Earnings breakdown by genre</p>
+            <h3 className="font-serif text-lg font-bold text-foreground mb-1">{t('admin.dashboard.charts.revenueShare.title')}</h3>
+            <p className="text-xs text-muted-foreground mb-6">{t('admin.dashboard.charts.revenueShare.subtitle')}</p>
 
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">

@@ -18,13 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import emailjs from '@emailjs/browser';
 import { useTranslation } from 'react-i18next';
-
-// EmailJS Configuration
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 interface Message {
     _id: string;
@@ -102,55 +96,29 @@ const MessageList = () => {
     const openReplyModal = (msg: Message) => {
         setSelectedMessage(msg);
         setReplySubject(`Re: ${msg.subject}`);
-        setReplyBody(`Dear ${msg.name},\n\nThank you for reaching out to Sri Chola Book Shop.\n\nWith regards,\nSri Chola Book Shop Support Team`);
+        setReplyBody(`${t('admin.messages.template.dear', { name: msg.name })}\n\n${t('admin.messages.template.thankYou')}\n\n${t('admin.messages.template.regards')}\n${t('admin.messages.template.supportTeam')}`);
         setIsReplyOpen(true);
     };
 
     const handleSendReply = async () => {
         if (!selectedMessage || !replyBody) return;
 
-        if (!EMAILJS_SERVICE_ID || !EMAILJS_PUBLIC_KEY) {
-            toast.error("EmailJS configuration missing");
-            return;
-        }
-
         setSending(true);
 
         try {
-            // Construct Email Logic
-            const htmlContent = `
-                <div style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; color: #333;">
-                    <p>${replyBody.replace(/\n/g, '<br/>')}</p>
-                    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;" />
-                    <p style="font-size: 12px; color: #888;">
-                        <strong>Original Message from ${selectedMessage.name}:</strong><br/>
-                        ${selectedMessage.message}
-                    </p>
-                </div>
-            `;
-
-            await emailjs.send(
-                EMAILJS_SERVICE_ID,
-                EMAILJS_TEMPLATE_ID,
-                {
-                    to_email: selectedMessage.email,
-                    subject: replySubject,
-                    html_content: htmlContent,
-                },
-                EMAILJS_PUBLIC_KEY
-            );
+            await api.post(`/api/messages/${selectedMessage._id}/reply`, {
+                subject: replySubject,
+                body: replyBody,
+            });
 
             toast.success(t('admin.messages.replySent', { email: selectedMessage.email }));
             setIsReplyOpen(false);
+            fetchMessages(); // Refresh to show updated read status
 
-            // Optionally mark as read
-            if (!selectedMessage.isRead) {
-                markAsRead(selectedMessage._id);
-            }
-
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error(t('admin.messages.replyError'));
+            const errMsg = error?.response?.data?.message || t('admin.messages.replyError');
+            toast.error(errMsg);
         } finally {
             setSending(false);
         }
@@ -168,7 +136,7 @@ const MessageList = () => {
                 </h1>
 
                 {loading ? (
-                    <div>Loading...</div>
+                    <div className="flex justify-center p-12">{t('admin.common.loading')}</div>
                 ) : (
                     <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                         <Table>
@@ -240,7 +208,7 @@ const MessageList = () => {
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label htmlFor="subject">Subject</Label>
+                            <Label htmlFor="subject">{t('admin.messages.form.subject')}</Label>
                             <Input
                                 id="subject"
                                 value={replySubject}
@@ -248,7 +216,7 @@ const MessageList = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="message">Message</Label>
+                            <Label htmlFor="message">{t('admin.messages.form.message')}</Label>
                             <Textarea
                                 id="message"
                                 value={replyBody}

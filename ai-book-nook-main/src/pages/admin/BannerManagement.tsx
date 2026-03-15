@@ -170,7 +170,7 @@ const BannerManagement = () => {
         return (
             <AdminLayout>
                 <div className="flex justify-center items-center h-full">
-                    Loading banner settings...
+                    {t('admin.banner.loading')}
                 </div>
             </AdminLayout>
         );
@@ -179,63 +179,60 @@ const BannerManagement = () => {
     return (
         <AdminLayout>
             <Helmet>
-                <title>Banner Management | Admin</title>
+                <title>{t('admin.banner.title')} | Admin</title>
             </Helmet>
 
             <div className="max-w-4xl mx-auto pb-12">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold font-serif flex items-center gap-3">
                         <LayoutTemplate className="h-8 w-8 text-primary" />
-                        Banner Management
+                        {t('admin.banner.title')}
                     </h1>
                     <Button onClick={handleSave} disabled={saving} className="gap-2">
                         <Save className="h-4 w-4" />
-                        {saving ? 'Saving...' : 'Save Changes'}
+                        {saving ? t('admin.common.saving') : t('admin.common.update')}
                     </Button>
                 </div>
 
                 <form onSubmit={handleSave} className="space-y-8">
                     {/* General Settings */}
                     <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
-                        <h2 className="text-xl font-semibold mb-4">General Settings</h2>
+                        <h2 className="text-xl font-semibold mb-4">{t('admin.banner.generalSettings')}</h2>
 
                         <div className="space-y-2">
-                            <Label htmlFor="title">Banner Title</Label>
+                            <Label htmlFor="title">{t('admin.banner.bannerTitle')}</Label>
                             <Input
                                 id="title"
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                placeholder="Enter banner title"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="subtitle">Subtitle / Description</Label>
+                            <Label htmlFor="subtitle">{t('admin.banner.subtitle')}</Label>
                             <Textarea
                                 id="subtitle"
                                 value={formData.subtitle}
                                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                                placeholder="Enter subtitle or description"
                                 className="min-h-[100px]"
                             />
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="imageUrl">Background Image URL</Label>
+                                <Label htmlFor="imageUrl">{t('admin.banner.bgImageUrl')}</Label>
                                 <div className="flex gap-2">
                                     <Input
                                         id="imageUrl"
                                         value={formData.imageUrl}
                                         onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                        placeholder="https://example.com/image.jpg"
                                     />
                                     {/* Placeholder for image upload if implemented later */}
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label className="flex justify-between">
-                                    Overlay Opacity <span>{Math.round(formData.overlayOpacity * 100)}%</span>
+                                    {t('admin.banner.overlayOpacity')} <span>{Math.round(formData.overlayOpacity * 100)}%</span>
                                 </Label>
                                 <Slider
                                     value={[formData.overlayOpacity]}
@@ -252,21 +249,21 @@ const BannerManagement = () => {
                                 checked={formData.isActive}
                                 onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked as boolean })}
                             />
-                            <Label htmlFor="isActive">Banner Active (Visible on Home Page)</Label>
+                            <Label htmlFor="isActive">{t('admin.banner.active')}</Label>
                         </div>
                     </div>
 
                     {/* Buttons Management */}
                     <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
                         <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-xl font-semibold">Action Buttons</h2>
+                            <h2 className="text-xl font-semibold">{t('admin.banner.actionButtons')}</h2>
                             <Button type="button" variant="outline" size="sm" onClick={addButton} className="gap-2">
-                                <Plus className="h-4 w-4" /> Add Button
+                                <Plus className="h-4 w-4" /> {t('admin.banner.addButton')}
                             </Button>
                         </div>
 
                         {formData.buttons.length === 0 && (
-                            <p className="text-muted-foreground text-center py-4">No buttons configured.</p>
+                            <p className="text-muted-foreground text-center py-4">{t('admin.banner.noButtons')}</p>
                         )}
 
                         <div className="space-y-4">
@@ -277,23 +274,21 @@ const BannerManagement = () => {
                                     </div>
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
                                         <div className="space-y-1">
-                                            <Label className="text-xs">Text</Label>
+                                            <Label className="text-xs">{t('admin.banner.buttonText')}</Label>
                                             <Input
                                                 value={btn.text}
                                                 onChange={(e) => handleButtonChange(index, 'text', e.target.value)}
-                                                placeholder="Button Text"
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-xs">Link</Label>
+                                            <Label className="text-xs">{t('admin.banner.buttonLink')}</Label>
                                             <Input
                                                 value={btn.link}
                                                 onChange={(e) => handleButtonChange(index, 'link', e.target.value)}
-                                                placeholder="/path"
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-xs">Variant</Label>
+                                            <Label className="text-xs">{t('admin.banner.buttonVariant')}</Label>
                                             <Select
                                                 value={btn.variant}
                                                 onValueChange={(val) => handleButtonChange(index, 'variant', val)}
@@ -302,10 +297,10 @@ const BannerManagement = () => {
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="hero">Hero (Gold)</SelectItem>
-                                                    <SelectItem value="paper">Paper (White)</SelectItem>
-                                                    <SelectItem value="primary">Primary</SelectItem>
-                                                    <SelectItem value="outline">Outline</SelectItem>
+                                                    <SelectItem value="hero">{t('admin.banner.heroGold')}</SelectItem>
+                                                    <SelectItem value="paper">{t('admin.banner.paperWhite')}</SelectItem>
+                                                    <SelectItem value="primary">{t('admin.banner.primary')}</SelectItem>
+                                                    <SelectItem value="outline">{t('admin.banner.outline')}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -316,7 +311,7 @@ const BannerManagement = () => {
                                                     checked={btn.isVisible}
                                                     onCheckedChange={(checked) => handleButtonChange(index, 'isVisible', checked)}
                                                 />
-                                                <Label htmlFor={`btn-visible-${index}`} className="text-xs">Visible</Label>
+                                                <Label htmlFor={`btn-visible-${index}`} className="text-xs">{t('admin.banner.visible')}</Label>
                                             </div>
                                             <Button
                                                 type="button"
@@ -337,14 +332,14 @@ const BannerManagement = () => {
                     {/* Counters/Stats Management */}
                     <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
                         <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-xl font-semibold">Statistics Counters</h2>
+                            <h2 className="text-xl font-semibold">{t('admin.banner.statsCounters')}</h2>
                             <Button type="button" variant="outline" size="sm" onClick={addCounter} className="gap-2">
-                                <Plus className="h-4 w-4" /> Add Counter
+                                <Plus className="h-4 w-4" /> {t('admin.banner.addCounter')}
                             </Button>
                         </div>
 
                         {formData.counters.length === 0 && (
-                            <p className="text-muted-foreground text-center py-4">No counters configured.</p>
+                            <p className="text-muted-foreground text-center py-4">{t('admin.banner.noCounters')}</p>
                         )}
 
                         <div className="space-y-4">
@@ -355,27 +350,24 @@ const BannerManagement = () => {
                                     </div>
                                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
                                         <div className="space-y-1">
-                                            <Label className="text-xs">Label</Label>
+                                            <Label className="text-xs">{t('admin.banner.counterLabel')}</Label>
                                             <Input
                                                 value={counter.label}
                                                 onChange={(e) => handleCounterChange(index, 'label', e.target.value)}
-                                                placeholder="e.g. Books"
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-xs">Value</Label>
+                                            <Label className="text-xs">{t('admin.banner.counterValue')}</Label>
                                             <Input
                                                 value={counter.value}
                                                 onChange={(e) => handleCounterChange(index, 'value', e.target.value)}
-                                                placeholder="e.g. 50K"
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-xs">Suffix</Label>
+                                            <Label className="text-xs">{t('admin.banner.counterSuffix')}</Label>
                                             <Input
                                                 value={counter.suffix}
                                                 onChange={(e) => handleCounterChange(index, 'suffix', e.target.value)}
-                                                placeholder="e.g. +"
                                             />
                                         </div>
                                         <div className="flex items-center gap-4 pt-4">
@@ -385,7 +377,7 @@ const BannerManagement = () => {
                                                     checked={counter.isVisible}
                                                     onCheckedChange={(checked) => handleCounterChange(index, 'isVisible', checked)}
                                                 />
-                                                <Label htmlFor={`counter-visible-${index}`} className="text-xs">Visible</Label>
+                                                <Label htmlFor={`counter-visible-${index}`} className="text-xs">{t('admin.banner.visible')}</Label>
                                             </div>
                                             <Button
                                                 type="button"

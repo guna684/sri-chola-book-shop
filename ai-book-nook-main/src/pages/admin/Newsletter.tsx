@@ -82,7 +82,6 @@ const Newsletter = () => {
                             <Input
                                 id="subject"
                                 type="text"
-                                placeholder={t('admin.newsletter.placeholders.subject')}
                                 value={subject}
                                 onChange={(e) => setSubject(e.target.value)}
                                 required
@@ -94,7 +93,6 @@ const Newsletter = () => {
                             <Label htmlFor="message">{t('admin.newsletter.form.message')}</Label>
                             <Textarea
                                 id="message"
-                                placeholder={t('admin.newsletter.placeholders.message')}
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 required

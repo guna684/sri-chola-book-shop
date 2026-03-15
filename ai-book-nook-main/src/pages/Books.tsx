@@ -67,7 +67,7 @@ const Books = () => {
     fetchData();
   }, []);
 
-  // Update selectedCategories when URL param changes
+  // Update selectedCategories, search, and bestseller filter when URL params change
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     if (categoryParam) {
@@ -82,6 +82,9 @@ const Books = () => {
     if (searchParam) {
       setSearchQuery(searchParam);
     }
+
+    // Sync bestseller filter from URL — clears it when navigating to /books without filter param
+    setShowBestsellersOnly(searchParams.get('filter') === 'bestseller');
   }, [searchParams]);
 
   const filteredBooks = useMemo(() => {

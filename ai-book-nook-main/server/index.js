@@ -3,9 +3,15 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
 
+// Initializing environment variables
 dotenv.config();
 
+
 connectDB();
+
+// Start the COD cancellation charge auto-expiry scheduler
+import { startCancellationScheduler } from './cancellationScheduler.js';
+startCancellationScheduler();
 
 const app = express();
 
@@ -55,6 +61,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/messages', messageRoutes);
+import settingsRoutes from './routes/settingsRoutes.js';
+app.use('/api/settings', settingsRoutes);
 import newsletterRoutes from './routes/newsletterRoutes.js';
 app.use('/api/newsletter', newsletterRoutes);
 import offerRoutes from './routes/offerRoutes.js';
@@ -71,6 +79,12 @@ import bannerRoutes from './routes/bannerRoutes.js';
 app.use('/api/banner', bannerRoutes);
 import uploadRoutes from './routes/uploadRoutes.js';
 app.use('/api/upload', uploadRoutes);
+import quickLinksRoutes from './routes/quickLinksRoutes.js';
+app.use('/api/admin', quickLinksRoutes);
+import shippingRoutes from './routes/shippingRoutes.js';
+app.use('/api/shipping', shippingRoutes);
+import deliveryPriceRoutes from './routes/deliveryPriceRoutes.js';
+app.use('/api/orders', deliveryPriceRoutes);
 
 
 

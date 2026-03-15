@@ -6,7 +6,7 @@ export const categories: Category[] = [
   { id: "3", name: "Mystery", slug: "mystery", icon: "🔍", bookCount: 156 },
   { id: "4", name: "Romance", slug: "romance", icon: "💕", bookCount: 203 },
   { id: "5", name: "Science Fiction", slug: "sci-fi", icon: "🚀", bookCount: 134 },
-  { id: "6", name: "Self-Help", slug: "self-help", icon: "✨", bookCount: 178 },
+  { id: "6", name: "Self-Improvement", slug: "self-improvement", icon: "✨", bookCount: 178 },
   { id: "7", name: "Biography", slug: "biography", icon: "👤", bookCount: 112 },
   { id: "8", name: "Children's", slug: "childrens", icon: "🧸", bookCount: 167 },
 ];

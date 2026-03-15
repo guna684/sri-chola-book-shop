@@ -1,15 +1,51 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, Mail, Phone, MapPin, Facebook, Instagram } from 'lucide-react';
+import { BookOpen, Mail, Phone, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+
+interface QuickLink {
+  id: number;
+  title: string;
+  path: string;
+  icon: string;
+  order: number;
+  active: boolean;
+}
+
+interface FooterCategory {
+  _id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  description: string;
+  bookCount: number;
+}
 
 const Footer = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
+  const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
+  const [categories, setCategories] = useState<FooterCategory[]>([]);
+
+  useEffect(() => {
+    const fetchFooterData = async () => {
+      try {
+        const [linksRes, catsRes] = await Promise.all([
+          api.get('/api/admin/quick-links/public'),
+          api.get('/api/categories')
+        ]);
+        setQuickLinks(linksRes.data);
+        setCategories(catsRes.data);
+      } catch (error) {
+        console.error('Failed to fetch footer data:', error);
+      }
+    };
+    fetchFooterData();
+  }, []);
 
   const handleSubscribe = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -75,44 +111,33 @@ const Footer = () => {
             <p className="text-sidebar-foreground/70 mb-6 leading-relaxed">
               {t('footer.tagline')}
             </p>
-            <div className="flex gap-4">
-              {[Facebook, Instagram].map((Icon, index) => (
-                <a
-                  key={index}
-                  href="#"
-                  className="h-10 w-10 rounded-full bg-sidebar-accent flex items-center justify-center hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-colors"
-                >
-                  <Icon className="h-5 w-5" />
-                </a>
-              ))}
-            </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links - fetched from API */}
           <div>
             <h4 className="font-serif text-lg font-semibold mb-4">{t('footer.quickLinks')}</h4>
             <ul className="space-y-3">
-              {['about', 'contact', 'faqs', 'shipping', 'returns', 'privacy'].map(link => (
-                <li key={link}>
-                  <Link to={`/${link}`} className="text-sidebar-foreground/70 hover:text-sidebar-primary">
-                    {t(`footer.links.${link}`)}
+              {quickLinks.map(link => (
+                <li key={link.id}>
+                  <Link to={link.path} className="text-sidebar-foreground/70 hover:text-sidebar-primary">
+                    {t(`footer.links.${link.title.toLowerCase()}`, link.title)}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Categories */}
+          {/* Categories - fetched from API */}
           <div>
             <h4 className="font-serif text-lg font-semibold mb-4">{t('footer.categories')}</h4>
             <ul className="space-y-3">
-              {['fiction', 'non-fiction', 'mystery', 'romance', 'sci-fi', 'self-help'].map(cat => (
-                <li key={cat}>
+              {categories.map(cat => (
+                <li key={cat._id}>
                   <Link
-                    to={`/books?category=${cat}`}
+                    to={`/books?category=${cat.slug}`}
                     className="text-sidebar-foreground/70 hover:text-sidebar-primary"
                   >
-                    {t(`categories.${cat}`)}
+                    {t(`categories.${cat.slug}`, cat.name)}
                   </Link>
                 </li>
               ))}
@@ -123,19 +148,20 @@ const Footer = () => {
           <div>
             <h4 className="font-serif text-lg font-semibold mb-4">{t('footer.contactUs')}</h4>
             <ul className="space-y-4">
-              <li className="flex gap-3">
-                <MapPin className="h-5 w-5 text-sidebar-primary" />
-                <span className="text-sidebar-foreground/70">
-                  New Delhi, India - 110001
+              <li className="flex gap-3 items-start">
+                <MapPin className="h-5 w-5 text-sidebar-primary mt-0.5 flex-shrink-0" />
+                <span className="text-sidebar-foreground/70 leading-tight">
+                  Kuthirai Vandi Theru, Seethalakshmi Puram<br />
+                  Gobichettipalayam, Tamil Nadu - 638476
                 </span>
               </li>
-              <li className="flex gap-3">
-                <Phone className="h-5 w-5 text-sidebar-primary" />
-                <span className="text-sidebar-foreground/70">+91 98765 43210</span>
+              <li className="flex gap-3 items-center">
+                <Phone className="h-5 w-5 text-sidebar-primary flex-shrink-0" />
+                <span className="text-sidebar-foreground/70">+91 9486762192</span>
               </li>
-              <li className="flex gap-3">
-                <Mail className="h-5 w-5 text-sidebar-primary" />
-                <span className="text-sidebar-foreground/70">support@sricholabookshop.com</span>
+              <li className="flex gap-3 items-center">
+                <Mail className="h-5 w-5 text-sidebar-primary flex-shrink-0" />
+                <span className="text-sidebar-foreground/70">sricholabookgob@gmail.com</span>
               </li>
             </ul>
           </div>
@@ -155,3 +181,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

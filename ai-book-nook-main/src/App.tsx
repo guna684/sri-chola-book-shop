@@ -38,6 +38,12 @@ import ReturnPolicy from "./pages/ReturnPolicy";
 import Shipping from "./pages/Shipping";
 import PromoCodeList from "./pages/admin/PromoCodeList";
 import BannerManagement from "./pages/admin/BannerManagement";
+import RefundManagement from "./pages/admin/RefundManagement";
+import DeliveryPriceManagement from "./pages/admin/DeliveryPriceManagement";
+import MyOrders from "./pages/MyOrders";
+import QuickLinksManagement from "./pages/admin/QuickLinksManagement";
+import StoreSettings from "./pages/admin/StoreSettings";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -66,16 +72,21 @@ const App = () => (
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                    <Route path="/admin/dashboard" element={<Dashboard />} />
-                    <Route path="/admin/productlist" element={<ProductList />} />
-                    <Route path="/admin/orderlist" element={<OrderList />} />
-                    <Route path="/admin/product/:id/edit" element={<ProductEdit />} />
-                    <Route path="/admin/messagelist" element={<MessageList />} />
-                    <Route path="/admin/userlist" element={<UserList />} />
-                    <Route path="/admin/categorylist" element={<CategoryList />} />
-                    <Route path="/admin/newsletter" element={<Newsletter />} />
-                    <Route path="/admin/promocodes" element={<PromoCodeList />} />
-                    <Route path="/admin/banner" element={<BannerManagement />} />
+                    <Route path="/admin/dashboard" element={<ProtectedAdminRoute><Dashboard /></ProtectedAdminRoute>} />
+                    <Route path="/admin/productlist" element={<ProtectedAdminRoute><ProductList /></ProtectedAdminRoute>} />
+                    <Route path="/admin/orderlist" element={<ProtectedAdminRoute><OrderList /></ProtectedAdminRoute>} />
+                    <Route path="/admin/product/:id/edit" element={<ProtectedAdminRoute><ProductEdit /></ProtectedAdminRoute>} />
+                    <Route path="/admin/messagelist" element={<ProtectedAdminRoute><MessageList /></ProtectedAdminRoute>} />
+                    <Route path="/admin/userlist" element={<ProtectedAdminRoute><UserList /></ProtectedAdminRoute>} />
+                    <Route path="/admin/categorylist" element={<ProtectedAdminRoute><CategoryList /></ProtectedAdminRoute>} />
+                    <Route path="/admin/newsletter" element={<ProtectedAdminRoute><Newsletter /></ProtectedAdminRoute>} />
+                    <Route path="/admin/promocodes" element={<ProtectedAdminRoute><PromoCodeList /></ProtectedAdminRoute>} />
+                    <Route path="/admin/banner" element={<ProtectedAdminRoute><BannerManagement /></ProtectedAdminRoute>} />
+                    <Route path="/admin/refunds" element={<ProtectedAdminRoute><RefundManagement /></ProtectedAdminRoute>} />
+                    <Route path="/admin/delivery-pricing" element={<ProtectedAdminRoute><DeliveryPriceManagement /></ProtectedAdminRoute>} />
+                    <Route path="/admin/quick-links" element={<ProtectedAdminRoute><QuickLinksManagement /></ProtectedAdminRoute>} />
+                    <Route path="/admin/settings" element={<ProtectedAdminRoute><StoreSettings /></ProtectedAdminRoute>} />
+                    <Route path="/orders" element={<MyOrders />} />
                     <Route path="/categories" element={<Categories />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/about" element={<About />} />

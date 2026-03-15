@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronLeft, Loader2, Upload, X } from 'lucide-react';
+import { ChevronLeft, Loader2, Upload, X, Search } from 'lucide-react';
 
 const ProductEdit = () => {
     const { id } = useParams();
@@ -22,24 +22,78 @@ const ProductEdit = () => {
     const [title, setTitle] = useState('');
     const [price, setPrice] = useState(0);
     const [image, setImage] = useState('');
-    const [imageUrl, setImageUrl] = useState('');
     const [author, setAuthor] = useState('');
     const [category, setCategory] = useState('');
     const [countInStock, setCountInStock] = useState(0);
     const [description, setDescription] = useState('');
     const [featured, setFeatured] = useState(false);
     const [bestseller, setBestseller] = useState(false);
-    const [isbn, setIsbn] = useState('');
+
     const [pages, setPages] = useState('');
     const [language, setLanguage] = useState('');
     const [publishedDate, setPublishedDate] = useState('');
+    const [publisher, setPublisher] = useState('');
     const [genre, setGenre] = useState('');
+
+    const [pastedDetails, setPastedDetails] = useState('');
 
     const [loading, setLoading] = useState(true);
     const [loadingUpdate, setLoadingUpdate] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState('');
+    const handlePasteFill = () => {
+        if (!pastedDetails) return;
+
+        const lines = pastedDetails.split('\n');
+        lines.forEach((line) => {
+            if (!line.includes(':')) return;
+
+            const [key, ...rest] = line.split(':');
+            const field = key.trim().toLowerCase();
+            const value = rest.join(':').trim();
+
+            if (!value) return;
+
+            switch (field) {
+                case 'title':
+                    setTitle(value);
+                    break;
+                case 'author':
+                    setAuthor(value);
+                    break;
+                case 'category':
+                    setCategory(value);
+                    break;
+                case 'pages':
+                    setPages(value);
+                    break;
+                case 'language':
+                    setLanguage(value);
+                    break;
+                case 'published date':
+                    let dateVal = value;
+                    if (dateVal.length === 4) dateVal += '-01-01';
+                    else if (dateVal.length === 7) dateVal += '-01';
+                    if (dateVal.length >= 10) {
+                        setPublishedDate(dateVal.substring(0, 10));
+                    } else {
+                        setPublishedDate(dateVal);
+                    }
+                    break;
+                case 'publisher':
+                    setPublisher(value);
+                    break;
+                case 'genre':
+                    setGenre(value);
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        toast.success('Book details parsed and filled');
+    };
 
     useEffect(() => {
         if (!user || (user && !user.isAdmin)) {
@@ -57,11 +111,10 @@ const ProductEdit = () => {
                 setDescription(data.description);
                 setCategory(data.category);
                 setImage(data.coverImage); // Backend uses 'coverImage'
-                setImageUrl(data.image_url || '');
                 setCountInStock(data.stock); // Backend uses 'stock'
                 setFeatured(data.featured);
                 setBestseller(data.bestseller);
-                setIsbn(data.isbn || '');
+
                 setPages(data.pages || '');
                 setLanguage(data.language || '');
                 if (data.publishedDate) {
@@ -69,6 +122,7 @@ const ProductEdit = () => {
                 } else {
                     setPublishedDate('');
                 }
+                setPublisher(data.publisher || '');
                 setGenre(data.genre || '');
                 setLoading(false);
             } catch (error) {
@@ -146,8 +200,8 @@ const ProductEdit = () => {
         setLoadingUpdate(true);
         try {
             // Custom validation: Ensure at least one image source is provided
-            if (!selectedFile && !image && !imageUrl) {
-                toast.error('Please provide at least one image source: upload a file, enter a static image path, or provide an image URL');
+            if (!selectedFile && !image) {
+                toast.error('Please upload a book cover image');
                 setLoadingUpdate(false);
                 return;
             }
@@ -177,14 +231,14 @@ const ProductEdit = () => {
                 description,
                 category,
                 coverImage: uploadedImagePath || image, // Prioritize uploaded image
-                image_url: imageUrl,
                 stock: countInStock, // Map 'countInStock' state to 'stock' for backend
                 featured,
                 bestseller,
-                isbn,
+
                 pages,
                 language,
                 publishedDate,
+                publisher,
                 genre,
             };
 
@@ -210,7 +264,7 @@ const ProductEdit = () => {
     return (
         <AdminLayout>
             <Helmet>
-                <title>Edit Product | Sri Chola Book Shop</title>
+                <title>{t('admin.products.editProduct')} | Sri Chola Book Shop</title>
             </Helmet>
 
             <div className="max-w-2xl mx-auto">
@@ -224,14 +278,47 @@ const ProductEdit = () => {
                     <div>{t('admin.common.loading')}</div>
                 ) : (
                     <form onSubmit={submitHandler} className="space-y-6 bg-card p-6 rounded-xl border border-border shadow-sm">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">{t('admin.products.form.title')}</Label>
-                            <Input
-                                id="title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                required
+
+                        {/* Paste Book Details Section */}
+                        <div className="bg-primary/5 border border-primary/20 p-5 rounded-lg mb-6 space-y-4">
+                            <Label htmlFor="pasteDetails">Paste Book Details</Label>
+                            <Textarea
+                                id="pasteDetails"
+                                value={pastedDetails}
+                                onChange={(e) => setPastedDetails(e.target.value)}
+                                placeholder="Title: Astrology Research Collection - Vol 1&#10;Author: Sunil John&#10;Category: Astrology / Spiritual Studies&#10;Pages: 299&#10;Language: English&#10;Published Date: 2022&#10;Publisher: Saptarishis Publications&#10;Genre: Vedic Astrology / Research"
+                                className="h-40 font-mono text-sm"
                             />
+                            <Button
+                                type="button"
+                                onClick={handlePasteFill}
+                                className="w-full md:w-auto"
+                            >
+                                Auto Fill
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="title">{t('admin.products.form.title')}</Label>
+                                <Input
+                                    id="title"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="Enter book title"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="author">{t('admin.products.form.author')}</Label>
+                                <Input
+                                    id="author"
+                                    value={author}
+                                    onChange={(e) => setAuthor(e.target.value)}
+                                    placeholder="Enter author name"
+                                    required
+                                />
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -257,22 +344,11 @@ const ProductEdit = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="image">{t('admin.products.form.image')} (Optional)</Label>
-                            <Input
-                                id="image"
-                                value={image}
-                                onChange={(e) => setImage(e.target.value)}
-                                placeholder="e.g., /images/book-cover.jpg"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Static image path (optional). You can upload a file or use an image URL instead.
-                            </p>
-                        </div>
+
 
                         {/* File Upload Section */}
                         <div className="space-y-2 border-t pt-4">
-                            <Label htmlFor="imageFile">Upload Book Image</Label>
+                            <Label htmlFor="imageFile">{t('admin.products.form.uploadTitle')}</Label>
                             <div className="flex gap-2">
                                 <Input
                                     id="imageFile"
@@ -298,11 +374,11 @@ const ProductEdit = () => {
                                 )}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Upload a book cover image (JPEG, PNG, WebP, max 5MB). This will be stored on the server.
+                                {t('admin.products.form.uploadHint')}
                             </p>
                             {imagePreview && (
                                 <div className="mt-2">
-                                    <p className="text-sm font-medium mb-2">Preview:</p>
+                                    <p className="text-sm font-medium mb-2">{t('admin.products.form.preview')}</p>
                                     <img
                                         src={imagePreview}
                                         alt="Upload Preview"
@@ -313,78 +389,34 @@ const ProductEdit = () => {
                             {uploadingImage && (
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Uploading image...
+                                    {t('admin.products.form.uploading')}
                                 </div>
                             )}
                         </div>
 
-                        <div className="space-y-2 border-t pt-4">
-                            <Label htmlFor="imageUrl">Image URL (Dynamic)</Label>
+
+
+                        <div className="space-y-2">
+                            <Label htmlFor="category">{t('admin.products.form.category')}</Label>
                             <Input
-                                id="imageUrl"
-                                value={imageUrl}
-                                onChange={(e) => setImageUrl(e.target.value)}
-                                placeholder="https://example.com/book-image.jpg"
+                                id="category"
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                required
                             />
-                            <p className="text-xs text-muted-foreground">
-                                Optional: Enter a direct URL to the book cover image. This will override the default image.
-                            </p>
-                            {imageUrl && (
-                                <div className="mt-2">
-                                    <img
-                                        src={imageUrl}
-                                        alt="Preview"
-                                        className="w-32 h-48 object-cover rounded border"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = 'none';
-                                        }}
-                                    />
-                                </div>
-                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="pages">{t('admin.products.form.pages')}</Label>
+                            <Input
+                                id="pages"
+                                type="number"
+                                value={pages}
+                                onChange={(e) => setPages(e.target.value)}
+                            />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="author">{t('admin.products.form.author')}</Label>
-                                <Input
-                                    id="author"
-                                    value={author}
-                                    onChange={(e) => setAuthor(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="category">{t('admin.products.form.category')}</Label>
-                                <Input
-                                    id="category"
-                                    value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="isbn">{t('admin.products.form.isbn')}</Label>
-                                <Input
-                                    id="isbn"
-                                    value={isbn}
-                                    onChange={(e) => setIsbn(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="pages">{t('admin.products.form.pages')}</Label>
-                                <Input
-                                    id="pages"
-                                    type="number"
-                                    value={pages}
-                                    onChange={(e) => setPages(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="language">{t('admin.products.form.language')}</Label>
                                 <Input
@@ -403,7 +435,15 @@ const ProductEdit = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="genre">{t('bookDetail.details.genre')}</Label>
+                                <Label htmlFor="publisher">Publisher</Label>
+                                <Input
+                                    id="publisher"
+                                    value={publisher}
+                                    onChange={(e) => setPublisher(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="genre">{t('admin.products.form.genre')}</Label>
                                 <Input
                                     id="genre"
                                     value={genre}
@@ -430,7 +470,7 @@ const ProductEdit = () => {
                                     checked={featured}
                                     onCheckedChange={(checked) => setFeatured(checked as boolean)}
                                 />
-                                <Label htmlFor="featured">Featured Product</Label>
+                                <Label htmlFor="featured">{t('admin.products.form.featuredProduct')}</Label>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Checkbox

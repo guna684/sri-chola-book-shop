@@ -2,12 +2,14 @@ import asyncHandler from 'express-async-handler';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Book from '../models/Book.js';
-import { getDeliveredFilter, getDeliveredDateRangeFilter } from '../utils/orderFilters.js';
+import { getDeliveredFilter, getDeliveredDateRangeFilter, getDashboardStatsFilter } from '../utils/orderFilters.js';
 
 // Helper function to get date range filter with default 30 days
 // NOW USES SHARED DELIVERED FILTER UTILITY
+// Helper function to get date range filter with default 30 days
+// NOW USES DASHBOARD STATS FILTER (NON-CANCELLED ORDERS)
 const getDateRangeFilter = (startDate, endDate) => {
-    return getDeliveredDateRangeFilter(startDate, endDate, false);
+    return getDashboardStatsFilter(startDate, endDate);
 };
 
 // @desc    Get sales data (Daily/Monthly)
@@ -38,7 +40,7 @@ const getSalesData = asyncHandler(async (req, res) => {
         {
             $match: {
                 createdAt: { $gte: startDate },
-                ...getDeliveredFilter()
+                ...getDashboardStatsFilter()
             }
         },
         {
@@ -256,7 +258,7 @@ const getStockStatus = asyncHandler(async (req, res) => {
 const getMonthlySalesTrends = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
 
-    let matchCondition = getDeliveredFilter();
+    let matchCondition = getDashboardStatsFilter();
 
     // Apply date filtering if provided
     if (startDate || endDate) {
@@ -292,7 +294,7 @@ const getMonthlySalesTrends = asyncHandler(async (req, res) => {
 const getRevenueByProduct = asyncHandler(async (req, res) => {
     const { startDate, endDate, category } = req.query;
 
-    let matchCondition = getDeliveredFilter();
+    let matchCondition = getDashboardStatsFilter();
 
     // Apply date filtering if provided
     if (startDate || endDate) {
@@ -342,11 +344,14 @@ const getRevenueByProduct = asyncHandler(async (req, res) => {
 // @route   GET /api/analytics/low-stock-alerts
 // @access  Private/Admin
 const getLowStockAlerts = asyncHandler(async (req, res) => {
-    const { threshold = 10, category } = req.query;
+    const { threshold = 200, category } = req.query;
 
+    // Use $and to avoid JS object key collision (both conditions on 'stock' must use $and)
     let matchCondition = {
-        stock: { $lte: parseInt(threshold) },
-        stock: { $gte: 0 } // Exclude negative stock
+        $and: [
+            { stock: { $lte: parseInt(threshold) } },
+            { stock: { $gte: 0 } } // Exclude negative stock
+        ]
     };
 
     // Add category filter if provided
@@ -357,7 +362,7 @@ const getLowStockAlerts = asyncHandler(async (req, res) => {
     const lowStockItems = await Book.find(matchCondition)
         .select('title category stock price')
         .sort({ stock: 1 })
-        .limit(20);
+        .limit(50);
 
     res.json(lowStockItems);
 });
@@ -367,7 +372,7 @@ const getLowStockAlerts = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const getDashboardOverview = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
-    const dateFilter = getDateRangeFilter(startDate, endDate);
+    const dateFilter = getDashboardStatsFilter(startDate, endDate);
 
     // Run all queries in parallel for better performance
     const [

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import api from '@/lib/axios';
 import { Loader2, AlertCircle, DollarSign } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface RevenueByProductChartProps {
     refreshTrigger?: number;
@@ -10,6 +11,7 @@ interface RevenueByProductChartProps {
 }
 
 const RevenueByProductChart = ({ refreshTrigger, dateRange, categoryFilter }: RevenueByProductChartProps) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,7 @@ const RevenueByProductChart = ({ refreshTrigger, dateRange, categoryFilter }: Re
         return (
             <div className="h-[350px] flex flex-col items-center justify-center bg-card rounded-xl border border-border text-muted-foreground">
                 <AlertCircle className="h-10 w-10 mb-2 opacity-50" />
-                <p>No revenue data available</p>
+                <p>{t('admin.dashboard.charts.revenueByProduct.noData')}</p>
             </div>
         );
     }
@@ -52,10 +54,10 @@ const RevenueByProductChart = ({ refreshTrigger, dateRange, categoryFilter }: Re
                     <p className="text-sm font-medium mb-2 text-foreground truncate">{label}</p>
                     <div className="space-y-1">
                         <p className="text-xs text-green-600 flex justify-between gap-4">
-                            <span>Revenue:</span> <span className="font-bold">₹{payload[0].value.toLocaleString()}</span>
+                            <span>{t('admin.dashboard.charts.revenueByProduct.revenue')}:</span> <span className="font-bold">₹{payload[0].value.toLocaleString()}</span>
                         </p>
                         <p className="text-xs text-blue-600 flex justify-between gap-4">
-                            <span>Units Sold:</span> <span className="font-bold">{payload[0].payload.unitsSold}</span>
+                            <span>{t('admin.dashboard.charts.revenueByProduct.unitsSold')}:</span> <span className="font-bold">{payload[0].payload.unitsSold}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">
                             {payload[0].payload.category}
@@ -71,9 +73,9 @@ const RevenueByProductChart = ({ refreshTrigger, dateRange, categoryFilter }: Re
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-1">
                 <DollarSign className="h-5 w-5 text-green-500" />
-                <h3 className="font-serif text-lg font-bold text-foreground">Top Revenue Products</h3>
+                <h3 className="font-serif text-lg font-bold text-foreground">{t('admin.dashboard.charts.revenueByProduct.title')}</h3>
             </div>
-            <p className="text-xs text-muted-foreground mb-6">Highest earning books</p>
+            <p className="text-xs text-muted-foreground mb-6">{t('admin.dashboard.charts.revenueByProduct.subtitle')}</p>
 
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -92,7 +94,7 @@ const RevenueByProductChart = ({ refreshTrigger, dateRange, categoryFilter }: Re
                             interval={0}
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.2)' }} />
-                        <Bar dataKey="totalRevenue" radius={[0, 4, 4, 0]} barSize={20} name="Revenue">
+                        <Bar dataKey="totalRevenue" radius={[0, 4, 4, 0]} barSize={20} name={t('admin.dashboard.charts.revenueByProduct.revenue')}>
                             {data.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}

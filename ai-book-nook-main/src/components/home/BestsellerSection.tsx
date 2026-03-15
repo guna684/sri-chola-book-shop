@@ -100,7 +100,7 @@ const BestsellerSection = () => {
               <div className="flex-1 min-w-0">
                 <Link to={`/book/${book.id}`}>
                   <h3 className="font-serif text-lg md:text-xl font-semibold text-foreground truncate hover:text-primary transition-colors">
-                    {getLocalized(book, 'title', i18n.language)} | Sri Chola Book Shop
+                    {getLocalized(book, 'title', i18n.language)} | {t('common.bookHaven')}
                   </h3>
                 </Link>
                 <p className="text-sm text-muted-foreground">{t('common.by')} {getLocalized(book, 'author', i18n.language)}</p>

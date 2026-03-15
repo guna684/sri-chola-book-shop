@@ -8,13 +8,20 @@ const __dirname = path.dirname(__filename);
 // Configure storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../uploads/books'));
+        let dest = '../uploads/books';
+        
+        // Dynamic destination based on route
+        if (req.originalUrl.includes('/category-icon')) {
+            dest = '../uploads/categories';
+        }
+        
+        cb(null, path.join(__dirname, dest));
     },
     filename: function (req, file, cb) {
         // Generate unique filename: timestamp-originalname
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
-        const nameWithoutExt = path.basename(file.originalname, ext);
+        const nameWithoutExt = path.basename(file.originalname, ext).replace(/\s+/g, '-');
         cb(null, nameWithoutExt + '-' + uniqueSuffix + ext);
     }
 });

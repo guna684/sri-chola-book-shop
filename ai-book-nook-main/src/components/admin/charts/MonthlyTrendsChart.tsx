@@ -8,7 +8,10 @@ interface MonthlyTrendsChartProps {
     dateRange?: { start: string; end: string };
 }
 
+import { useTranslation } from 'react-i18next';
+
 const MonthlyTrendsChart = ({ refreshTrigger, dateRange }: MonthlyTrendsChartProps) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -36,7 +39,7 @@ const MonthlyTrendsChart = ({ refreshTrigger, dateRange }: MonthlyTrendsChartPro
         return (
             <div className="h-[350px] flex flex-col items-center justify-center bg-card rounded-xl border border-border text-muted-foreground">
                 <AlertCircle className="h-10 w-10 mb-2 opacity-50" />
-                <p>No monthly trends data available</p>
+                <p>{t('admin.dashboard.charts.monthlyTrends.noData')}</p>
             </div>
         );
     }
@@ -48,10 +51,10 @@ const MonthlyTrendsChart = ({ refreshTrigger, dateRange }: MonthlyTrendsChartPro
                     <p className="text-sm font-medium mb-2 text-foreground">{label}</p>
                     <div className="space-y-1">
                         <p className="text-xs text-green-600 flex justify-between gap-4">
-                            <span>Revenue:</span> <span className="font-bold">₹{payload[0].value.toLocaleString()}</span>
+                            <span>{t('admin.dashboard.charts.monthlyTrends.revenue')}:</span> <span className="font-bold">₹{payload[0].value.toLocaleString()}</span>
                         </p>
                         <p className="text-xs text-blue-600 flex justify-between gap-4">
-                            <span>Orders:</span> <span className="font-bold">{payload[1].value}</span>
+                            <span>{t('admin.dashboard.charts.monthlyTrends.orders')}:</span> <span className="font-bold">{payload[1].value}</span>
                         </p>
                     </div>
                 </div>
@@ -64,9 +67,9 @@ const MonthlyTrendsChart = ({ refreshTrigger, dateRange }: MonthlyTrendsChartPro
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="h-5 w-5 text-green-500" />
-                <h3 className="font-serif text-lg font-bold text-foreground">Monthly Sales Trends</h3>
+                <h3 className="font-serif text-lg font-bold text-foreground">{t('admin.dashboard.charts.monthlyTrends.title')}</h3>
             </div>
-            <p className="text-xs text-muted-foreground mb-6">Revenue and order volume over time</p>
+            <p className="text-xs text-muted-foreground mb-6">{t('admin.dashboard.charts.monthlyTrends.subtitle')}</p>
 
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -102,7 +105,7 @@ const MonthlyTrendsChart = ({ refreshTrigger, dateRange }: MonthlyTrendsChartPro
                             strokeWidth={3}
                             dot={{ r: 4, strokeWidth: 0 }}
                             activeDot={{ r: 6 }}
-                            name="Revenue (₹)"
+                            name={`${t('admin.dashboard.charts.monthlyTrends.revenue')} (₹)`}
                         />
                         <Line
                             yAxisId="right"
@@ -112,7 +115,7 @@ const MonthlyTrendsChart = ({ refreshTrigger, dateRange }: MonthlyTrendsChartPro
                             strokeWidth={3}
                             dot={{ r: 4, strokeWidth: 0 }}
                             activeDot={{ r: 6 }}
-                            name="Orders"
+                            name={t('admin.dashboard.charts.monthlyTrends.orders')}
                         />
                     </LineChart>
                 </ResponsiveContainer>

@@ -160,7 +160,7 @@ const Invoice = () => {
                     {/* Footer */}
                     <div className="mt-12 pt-8 border-t border-gray-200 text-center text-gray-500 text-sm">
                         <p>Thank you for your business!</p>
-                        <p className="mt-2">If you have any questions about this invoice, please contact support@sricholabookshop.com</p>
+                        <p className="mt-2">If you have any questions about this invoice, please contact sricholabookgob@gmail.com</p>
                     </div>
                 </div>
             </div>

@@ -3,7 +3,7 @@ import sendEmail from './utils/sendEmail.js';
 import mongoose from 'mongoose';
 import User from './models/User.js';
 
-dotenv.config();
+dotenv.config({ path: './server/.env' });
 
 const testEmailSystem = async () => {
     try {

@@ -11,10 +11,10 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import api from '@/lib/axios';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +23,19 @@ const Login = () => {
 
   const { login, user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  // Simple error boundary
+  if (!login || !navigate) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+          <p>Please wait while we set up your login page.</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (user) {
@@ -32,7 +45,7 @@ const Login = () => {
         navigate('/');
       }
     }
-  }, [user, navigate]);
+  }, [user, navigate, t]);
 
   const handleGoogleAutofill = () => {
     // In a real application, this would use the Google Identity Services SDK
@@ -50,49 +63,21 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
-
       if (isLogin) {
-        const { data } = await api.post(
-          '/api/users/login',
-          { email, password }
-        );
-
-        // Logic to enforce Admin Login separation
-        if (isAdminLogin && !data.isAdmin) {
-          toast.error("Access Denied: You are not an administrator.");
-          setLoading(false);
-          return;
-        }
-
-        if (!isAdminLogin && data.isAdmin) {
-          // Optional: If an admin tries to login as regular user, maybe we allow it?
-          // Or maybe we redirect them to dashboard anyway?
-          // For now, let's allow it but warn or just proceed.
-          // But the user asked for a separate option.
-          // Let's strictly redirect based on the toggle?
-          // Actually, if they are admin, they can access everything.
-        }
+        const { data } = await api.post('/api/users/login', { email, password });
 
         login(data);
         toast.success(`Welcome back, ${data.name}!`);
-
-        if (isAdminLogin || data.isAdmin) {
+        
+        // Redirect based on user role
+        if (data.isAdmin) {
           navigate('/admin/dashboard');
         } else {
           navigate('/');
         }
-
       } else {
-        // Register (Always User)
-        const { data } = await api.post(
-          '/api/users',
-          { name, email, password }
-        );
+        // Register (always customer)
+        const { data } = await api.post('/api/users', { name, email, password });
         login(data);
         toast.success('Account created successfully!');
         navigate('/');
@@ -107,7 +92,7 @@ const Login = () => {
   return (
     <>
       <Helmet>
-        <title>{`${isLogin ? (isAdminLogin ? 'Admin Sign In' : 'Sign In') : 'Create Account'} | Sri Chola Book Shop`}</title>
+        <title>{`${isLogin ? 'Sign In' : 'Create Account'} | Sri Chola Book Shop`}</title>
       </Helmet>
       <div className="min-h-screen flex">
         {/* Left - Form */}
@@ -127,34 +112,16 @@ const Login = () => {
 
             <div className="mb-6">
               <h1 className="font-serif text-3xl font-bold text-foreground mb-2">
-                {isLogin ? (isAdminLogin ? 'Admin Portal' : 'Welcome Back!') : 'Create Account'}
+                {isLogin ? 'Welcome Back!' : 'Create Account'}
               </h1>
               <p className="text-muted-foreground">
                 {isLogin
-                  ? (isAdminLogin ? 'Sign in to manage the Sri Chola Book Shop platform' : 'Sign in to access your account and continue shopping')
+                  ? 'Sign in to access your account and continue shopping'
                   : 'Join Sri Chola Book Shop to start your reading journey'}
               </p>
             </div>
 
-            {/* Admin Toggle */}
-            {isLogin && (
-              <div className="flex p-1 bg-secondary rounded-lg mb-8">
-                <button
-                  onClick={() => setIsAdminLogin(false)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isAdminLogin ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
-                    }`}
-                >
-                  Customer Login
-                </button>
-                <button
-                  onClick={() => setIsAdminLogin(true)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isAdminLogin ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
-                    }`}
-                >
-                  Admin Login
-                </button>
-              </div>
-            )}
+
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {!isLogin && (
@@ -178,7 +145,7 @@ const Login = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder={isAdminLogin ? "admin@sricholabooks.com" : "you@example.com"}
+                    placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -210,7 +177,7 @@ const Login = () => {
                 </div>
               </div>
 
-              {isLogin && !isAdminLogin && (
+              {isLogin && (
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox />
@@ -223,7 +190,7 @@ const Login = () => {
               )}
 
               <Button variant="gold" size="lg" className="w-full gap-2" disabled={loading}>
-                {loading ? 'Processing...' : (isLogin ? (isAdminLogin ? 'Admin Sign In' : 'Sign In') : 'Create Account')}
+                {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
                 {loading ? null : <ArrowRight className="h-5 w-5" />}
               </Button>
             </form>
@@ -233,10 +200,7 @@ const Login = () => {
             <p className="text-center mt-8 text-muted-foreground">
               {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
               <button
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setIsAdminLogin(false); // Reset admin toggle when switching modes
-                }}
+                onClick={() => setIsLogin(!isLogin)}
                 className="text-primary font-medium hover:underline"
               >
                 {isLogin ? 'Sign up' : 'Sign in'}

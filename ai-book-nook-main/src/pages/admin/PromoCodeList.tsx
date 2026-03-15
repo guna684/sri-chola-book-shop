@@ -220,7 +220,6 @@ const PromoCodeManagement = () => {
                                             id="code"
                                             value={formData.code}
                                             onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                                            placeholder={t('admin.promo.placeholders.code')}
                                             required
                                         />
                                     </div>
@@ -276,7 +275,6 @@ const PromoCodeManagement = () => {
                                             min="0"
                                             value={formData.maxDiscount}
                                             onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value })}
-                                            placeholder={t('admin.promo.placeholders.maxDiscount')}
                                         />
                                     </div>
 
@@ -363,9 +361,9 @@ const PromoCodeManagement = () => {
                                             <h3 className="text-xl font-bold font-mono">{promo.code}</h3>
                                             <p className="text-sm text-muted-foreground">
                                                 {promo.discountType === 'PERCENT'
-                                                    ? `${promo.discountValue}% off`
-                                                    : `₹${promo.discountValue} off`}
-                                                {promo.maxDiscount && ` (Max: ₹${promo.maxDiscount})`}
+                                                    ? t('admin.promo.card.percentOff', { value: promo.discountValue })
+                                                    : t('admin.promo.card.flatOff', { value: promo.discountValue })}
+                                                {promo.maxDiscount && ` (${t('admin.promo.card.max')}: ₹${promo.maxDiscount})`}
                                             </p>
                                         </div>
                                     </div>

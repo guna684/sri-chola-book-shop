@@ -77,4 +77,45 @@ const markMessageAsRead = asyncHandler(async (req, res) => {
     }
 });
 
-export { createMessage, getMessages, deleteMessage, markMessageAsRead };
+// @desc    Send reply to a message
+// @route   POST /api/messages/:id/reply
+// @access  Private/Admin
+const replyMessage = asyncHandler(async (req, res) => {
+    const { subject, body } = req.body;
+    const message = await Message.findById(req.params.id);
+
+    if (!message) {
+        res.status(404);
+        throw new Error('Message not found');
+    }
+
+    if (!subject || !body) {
+        res.status(400);
+        throw new Error('Subject and body are required');
+    }
+
+    const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; color: #333;">
+            <p>${body.replace(/\n/g, '<br/>')}</p>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;" />
+            <p style="font-size: 12px; color: #888;">
+                <strong>Original message from ${message.name}:</strong><br/>
+                ${message.message}
+            </p>
+        </div>
+    `;
+
+    await sendEmail({
+        to: message.email,
+        subject: subject,
+        html: htmlContent,
+    });
+
+    // Mark as read after replying
+    message.isRead = true;
+    await message.save();
+
+    res.json({ success: true, message: `Reply sent to ${message.email}` });
+});
+
+export { createMessage, getMessages, deleteMessage, markMessageAsRead, replyMessage };

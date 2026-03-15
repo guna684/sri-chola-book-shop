@@ -73,36 +73,36 @@ const Contact = () => {
 
                         <div className="space-y-6">
                             <div className="flex items-start gap-4">
-                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
                                     <MapPin className="h-5 w-5 text-primary" />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <h3 className="font-semibold mb-1">{t('contact.location')}</h3>
-                                    <p className="text-muted-foreground">
-                                        123 Book Street, Library District,<br />
-                                        New Delhi, India - 110001
+                                    <p className="text-muted-foreground leading-tight">
+                                        Kuthirai Vandi Theru, Seethalakshmi Puram<br />
+                                        Gobichettipalayam, Tamil Nadu - 638476
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-center gap-4">
                                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                     <Phone className="h-5 w-5 text-primary" />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <h3 className="font-semibold mb-1">{t('contact.phone')}</h3>
-                                    <p className="text-muted-foreground">+91 98765 43210</p>
+                                    <p className="text-muted-foreground">+91 9486762192</p>
                                     <p className="text-xs text-muted-foreground mt-1">{t('contact.phoneSub')}</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-center gap-4">
                                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                     <Mail className="h-5 w-5 text-primary" />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <h3 className="font-semibold mb-1">{t('contact.email')}</h3>
-                                    <p className="text-muted-foreground">support@sricholabookshop.com</p>
+                                    <p className="text-muted-foreground">sricholabookgob@gmail.com</p>
                                     <p className="text-xs text-muted-foreground mt-1">{t('contact.emailSub')}</p>
                                 </div>
                             </div>

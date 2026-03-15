@@ -7,7 +7,7 @@ import sendEmail from '../utils/sendEmail.js';
 import { generateInvoiceTemplate } from '../utils/invoiceTemplate.js';
 import PromoCode from '../models/PromoCode.js';
 import PromoCodeUsage from '../models/PromoCodeUsage.js';
-import { getDeliveredDateRangeFilter } from '../utils/orderFilters.js';
+import { getDeliveredDateRangeFilter, getDashboardStatsFilter } from '../utils/orderFilters.js';
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -22,7 +22,8 @@ const addOrderItems = asyncHandler(async (req, res) => {
         shippingPrice,
         totalPrice,
         promoCodeId,
-        discountAmount
+        discountAmount,
+        shippingDetails // Optional: shipping calculation details
     } = req.body;
 
     if (orderItems && orderItems.length === 0) {
@@ -105,7 +106,9 @@ const addOrderItems = asyncHandler(async (req, res) => {
             shippingPrice,
             totalPrice,
             promoCode: validatedPromoCode ? validatedPromoCode._id : null,
-            discountAmount: validatedDiscount
+            discountAmount: validatedDiscount,
+            // Store shipping calculation details if provided
+            shippingDetails: shippingDetails || null
         });
 
         const createdOrder = await order.save();
@@ -221,19 +224,19 @@ const updateOrderToDelivered = asyncHandler(async (req, res) => {
 const getDashboardStats = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
 
-    // Use shared delivered filter utility - single source of truth
-    const deliveredFilter = getDeliveredDateRangeFilter(startDate, endDate, false);
+    // Use dashboard stats filter (non-cancelled orders)
+    const statsFilter = getDashboardStatsFilter(startDate, endDate);
 
-    const orders = await Order.find(deliveredFilter);
+    const orders = await Order.find(statsFilter);
     const users = await User.countDocuments({ isAdmin: false }); // All time, not date-filtered
     const books = await Book.countDocuments();
 
     const totalOrders = orders.length;
     const totalSales = orders.reduce((acc, order) => acc + order.totalPrice, 0);
-    const totalPaidOrders = orders.length; // All delivered orders are considered paid
+    const totalPaidOrders = orders.length;
 
-    console.log('📊 Dashboard Stats (using shared filter):');
-    console.log('   Filter:', deliveredFilter);
+    console.log('📊 Dashboard Stats (using dashboard filter):');
+    console.log('   Filter:', statsFilter);
     console.log('   Total Orders:', totalOrders);
     console.log('   Total Sales:', totalSales);
 
@@ -308,7 +311,364 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
     }
 });
 
+
+// COD cancellation charge config (fixed ₹50 OR 5% of order value, whichever is greater, max ₹100)
+const COD_CANCELLATION_CHARGE_FIXED = 50;
+const COD_CANCELLATION_CHARGE_PCT = 0.05; // 5%
+
+const computeCODCharge = (totalPrice) => {
+    const pctCharge = parseFloat((totalPrice * COD_CANCELLATION_CHARGE_PCT).toFixed(2));
+    return Math.min(Math.max(pctCharge, COD_CANCELLATION_CHARGE_FIXED), 100);
+};
+
+const isCOD = (paymentMethod = '') =>
+    paymentMethod.toLowerCase().includes('cod') ||
+    paymentMethod.toLowerCase().includes('cash');
+
+// @desc    Get refund preview details (Prepaid orders only)
+// @route   GET /api/orders/:id/refund-preview
+// @access  Private
+const getRefundPreview = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+    if (order.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+        res.status(401); throw new Error('Not authorized');
+    }
+    const nonCancellableStatuses = ['Delivered', 'Cancelled', 'Shipped'];
+    if (nonCancellableStatuses.includes(order.status)) {
+        res.status(400); throw new Error(`Cannot cancel an order that is ${order.status}`);
+    }
+    if (order.refundStatus || order.cancellationCharge != null) {
+        res.status(400); throw new Error('Cancellation already initiated for this order');
+    }
+
+    const originalAmount = order.totalPrice;
+    const cancellationFee = Math.min(parseFloat((originalAmount * 0.02).toFixed(2)), 50);
+    const refundAmount = parseFloat((originalAmount - cancellationFee).toFixed(2));
+
+    res.json({
+        paymentType: 'Prepaid',
+        originalAmount,
+        cancellationFee,
+        refundAmount,
+        refundMethod: order.paymentMethod,
+        estimatedDays: '5-7 working days',
+    });
+});
+
+// @desc    Get COD cancellation charge preview
+// @route   GET /api/orders/:id/cod-cancel-preview
+// @access  Private
+const getCODCancellationPreview = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+    if (order.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+        res.status(401); throw new Error('Not authorized');
+    }
+    const nonCancellableStatuses = ['Delivered', 'Cancelled', 'Shipped'];
+    if (nonCancellableStatuses.includes(order.status)) {
+        res.status(400); throw new Error(`Cannot cancel an order that is ${order.status}`);
+    }
+    if (order.cancellationCharge != null) {
+        res.status(400); throw new Error('Cancellation already initiated for this order');
+    }
+
+    const orderTotal = order.totalPrice;
+    const codCharge = computeCODCharge(orderTotal);
+
+    res.json({
+        paymentType: 'COD',
+        orderTotal,
+        codHandlingCharge: COD_CANCELLATION_CHARGE_FIXED,
+        cancellationCharge: codCharge,
+        totalCharges: codCharge,
+        message: `This order was placed using Cash on Delivery. If you cancel now, a cancellation charge of ₹${codCharge} will be applied to your account.`,
+    });
+});
+
+// @desc    Confirm cancellation – handles both Prepaid and COD
+// @route   PUT /api/orders/:id/confirm-cancel
+// @access  Private
+const confirmCancellation = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+    if (order.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+        res.status(401); throw new Error('Not authorized to cancel this order');
+    }
+    const nonCancellableStatuses = ['Delivered', 'Cancelled', 'Shipped'];
+    if (nonCancellableStatuses.includes(order.status)) {
+        res.status(400); throw new Error(`Cannot cancel an order that is ${order.status}`);
+    }
+    if (order.refundStatus || order.cancellationCharge != null) {
+        res.status(400); throw new Error('Cancellation already initiated for this order');
+    }
+
+    order.status = 'Cancelled';
+    order.cancelledAt = new Date();
+    order.cancelledBy = 'user';
+
+    if (isCOD(order.paymentMethod)) {
+        // COD – record charge, no refund
+        const codCharge = computeCODCharge(order.totalPrice);
+        const dueDate = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours from now
+        order.cancellationType = 'COD';
+        order.cancellationCharge = codCharge;
+        order.cancellationChargeStatus = 'Pending';
+        order.cancellationDueDate = dueDate;
+        order.cancellationReason = 'User Cancelled (COD)';
+    } else {
+        // Prepaid – compute refund
+        const originalAmount = order.totalPrice;
+        const cancellationFee = Math.min(parseFloat((originalAmount * 0.02).toFixed(2)), 50);
+        const refundAmount = parseFloat((originalAmount - cancellationFee).toFixed(2));
+        order.cancellationType = 'Prepaid';
+        order.refundStatus = 'Pending';
+        order.refundDetails = {
+            originalAmount,
+            cancellationFee,
+            refundAmount,
+            refundMethod: order.paymentMethod,
+            estimatedDays: '5-7 working days',
+            adminNotes: '',
+            transactionId: order.paymentResult?.id || '',
+        };
+    }
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+});
+
+// @desc    Admin updates COD cancellation charge (amount, status, remarks, paid date)
+// @route   PUT /api/orders/:id/cod-charge
+// @access  Private/Admin
+const updateCancellationCharge = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+
+    const { cancellationChargeStatus, chargeRemarks, cancellationCharge, cancellationPaidAt, cancellationDueDate } = req.body;
+
+    if (cancellationCharge !== undefined) order.cancellationCharge = cancellationCharge;
+
+    if (cancellationDueDate !== undefined) {
+        order.cancellationDueDate = cancellationDueDate ? new Date(cancellationDueDate) : null;
+    }
+
+    if (cancellationChargeStatus) {
+        order.cancellationChargeStatus = cancellationChargeStatus;
+        // If admin marks as Paid
+        if (cancellationChargeStatus === 'Paid') {
+            if (!order.cancellationPaidAt) {
+                order.cancellationPaidAt = cancellationPaidAt ? new Date(cancellationPaidAt) : new Date();
+            }
+            // If it was Pending cancellation, finalize it
+            if (order.status === 'Cancellation Pending') {
+                order.status = 'Cancelled';
+                order.cancelledAt = order.cancellationPaidAt || new Date();
+                order.cancelledBy = 'admin';
+                order.cancellationConfirmedAt = new Date();
+                order.cancellationDueDate = null;
+            }
+        }
+        // If marking Waived and order is still Cancellation Pending, auto-cancel it
+        if (cancellationChargeStatus === 'Waived' && order.status === 'Cancellation Pending') {
+            order.status = 'Cancelled';
+            order.cancelledAt = new Date();
+            order.cancelledBy = 'admin';
+            order.cancellationDueDate = null;
+            order.cancellationConfirmedAt = new Date();
+        }
+    }
+    if (chargeRemarks !== undefined) order.chargeRemarks = chargeRemarks;
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// COD PAYMENT-GATED CANCELLATION
+// ────────────────────────────────────────────────────────────────────────────
+
+// @desc    Step 1 – Initiate COD cancellation (does NOT cancel immediately)
+// @route   PUT /api/orders/:id/initiate-cod-cancel
+// @access  Private
+const initiateCODCancellation = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+    if (order.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+        res.status(401); throw new Error('Not authorized');
+    }
+
+    const nonCancellableStatuses = ['Delivered', 'Cancelled', 'Shipped', 'Cancellation Pending'];
+    if (nonCancellableStatuses.includes(order.status)) {
+        res.status(400); throw new Error(`Cannot initiate cancellation for an order that is ${order.status}`);
+    }
+
+    const codCharge = computeCODCharge(order.totalPrice);
+    const dueDate = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours from now
+
+    order.status = 'Cancellation Pending';
+    order.cancellationType = 'COD';
+    order.cancellationCharge = codCharge;
+    order.cancellationChargeStatus = 'Pending';
+    order.cancellationDueDate = dueDate;
+    order.cancellationRequestedAt = new Date();
+    order.cancellationReason = 'User Initiated (COD)';
+
+    const updatedOrder = await order.save();
+
+    res.json({
+        ...updatedOrder.toObject(),
+        // Extra preview data for frontend modal
+        codHandlingCharge: COD_CANCELLATION_CHARGE_FIXED,
+        dueDate,
+        cancellationCharge: codCharge,
+    });
+});
+
+// @desc    Step 1b – Revert COD cancellation request (user clicks Cancel Request)
+// @route   PUT /api/orders/:id/revert-cod-cancel
+// @access  Private
+const revertCODCancellation = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+    if (order.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+        res.status(401); throw new Error('Not authorized');
+    }
+    if (order.status !== 'Cancellation Pending') {
+        res.status(400); throw new Error('Order is not in Cancellation Pending state');
+    }
+
+    order.status = 'Processing';
+    order.cancellationCharge = null;
+    order.cancellationChargeStatus = null;
+    order.cancellationType = null;
+    order.cancellationDueDate = null;
+    order.cancellationRequestedAt = null;
+    order.cancellationRazorpayOrderId = null;
+    order.cancellationReason = null;
+    order.cancellationPaymentMethod = null;
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+});
+
+// @desc    Step 2b – User selects COD Recovery mode (cancel now, charge recovered on next order)
+// @route   PUT /api/orders/:id/cod-recovery-cancel
+// @access  Private
+const selectCODRecovery = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+    if (order.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+        res.status(401); throw new Error('Not authorized');
+    }
+    if (order.status !== 'Cancellation Pending') {
+        res.status(400); throw new Error('Order is not in Cancellation Pending state');
+    }
+
+    const now = new Date();
+    order.status = 'Cancelled';
+    order.cancelledAt = now;
+    order.cancelledBy = 'user';
+    order.cancellationPaymentMethod = 'COD Recovery';
+    order.cancellationConfirmedAt = now;
+    // Charge remains Pending until recovered on next order
+    order.cancellationChargeStatus = 'Pending';
+    order.cancellationDueDate = null;
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+});
+
+// @desc    Admin override – force cancel or force continue a Cancellation Pending order
+// @route   PUT /api/orders/:id/admin-cod-override
+// @access  Private/Admin
+const adminOverrideCODCancellation = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+
+    const { action, remarks } = req.body;
+    if (!['force-cancel', 'force-continue'].includes(action)) {
+        res.status(400); throw new Error('action must be force-cancel or force-continue');
+    }
+
+    if (remarks) order.chargeRemarks = remarks;
+    const now = new Date();
+
+    if (action === 'force-cancel') {
+        order.status = 'Cancelled';
+        order.cancelledAt = now;
+        order.cancelledBy = 'admin';
+        order.cancellationChargeStatus = 'Waived';
+        order.cancellationConfirmedAt = now;
+        order.cancellationDueDate = null;
+    } else {
+        // force-continue: revert to Processing
+        order.status = 'Processing';
+        order.cancellationChargeStatus = 'Expired';
+        order.cancellationCharge = null;
+        order.cancellationDueDate = null;
+        order.cancellationRequestedAt = null;
+        order.cancellationRazorpayOrderId = null;
+        order.cancellationPaymentMethod = null;
+    }
+
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+});
+
+// @desc    Admin updates refund info (amount, status, notes, transactionId)
+// @route   PUT /api/orders/:id/refund
+// @access  Private/Admin
+const updateRefund = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+    if (order.refundStatus === 'Processed') {
+        res.status(400); throw new Error('Refund is already processed and cannot be modified');
+    }
+    const { refundAmount, refundStatus, adminNotes, transactionId } = req.body;
+    if (refundAmount !== undefined) {
+        order.refundDetails.refundAmount = refundAmount;
+        if (order.refundDetails.originalAmount !== undefined) {
+            order.refundDetails.cancellationFee = order.refundDetails.originalAmount - refundAmount;
+        }
+    }
+    if (adminNotes !== undefined) order.refundDetails.adminNotes = adminNotes;
+    if (transactionId !== undefined) order.refundDetails.transactionId = transactionId;
+    if (refundStatus) order.refundStatus = refundStatus;
+    const updatedOrder = await order.save();
+    res.json(updatedOrder);
+});
+
+// @desc    Serve order invoice as HTML (user opens in new tab, prints to PDF)
+// @route   GET /api/orders/:id/invoice
+// @access  Private
+const getOrderInvoice = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id).populate('user', 'name email');
+    if (!order) { res.status(404); throw new Error('Order not found'); }
+    if (order.user._id.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+        res.status(403); throw new Error('Not authorised');
+    }
+    const html = generateInvoiceTemplate(order, order.user);
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+});
+
+// @desc    Delete order permanently
+// @route   DELETE /api/orders/:id
+// @access  Private/Admin
+const deleteOrder = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+        res.status(404);
+        throw new Error('Order not found');
+    }
+    await Order.deleteOne({ _id: order._id });
+    res.json({ message: 'Order deleted successfully' });
+});
+
+
 export {
+
     addOrderItems,
     getOrderById,
     updateOrderToPaid,
@@ -317,5 +677,17 @@ export {
     getOrders,
     getDashboardStats,
     cancelOrder,
-    updateOrderStatus
+    updateOrderStatus,
+    getRefundPreview,
+    getCODCancellationPreview,
+    confirmCancellation,
+    updateCancellationCharge,
+    updateRefund,
+    initiateCODCancellation,
+    revertCODCancellation,
+    selectCODRecovery,
+    adminOverrideCODCancellation,
+    getOrderInvoice,
+    deleteOrder,
 };
+

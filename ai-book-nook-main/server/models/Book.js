@@ -13,16 +13,17 @@ const bookSchema = new mongoose.Schema({
     stock: { type: Number, required: true, default: 0 },
     rating: { type: Number, required: true, default: 0 },
     reviewCount: { type: Number, default: 0 },
-    coverImage: { type: String }, // Optional: can use uploaded file, static path, or image_url
-    image_url: { type: String }, // Dynamic image URL from database
+    coverImage: { type: String }, // User uploaded file or static path
     originalPrice: { type: Number },
     genre: { type: String },
     isbn: { type: String },
     pages: { type: Number },
     language: { type: String },
     publishedDate: { type: Date },
+    publisher: { type: String },
     featured: { type: Boolean, default: false },
     bestseller: { type: Boolean, default: false },
+    soldCount: { type: Number, default: 0 },
     reviews: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

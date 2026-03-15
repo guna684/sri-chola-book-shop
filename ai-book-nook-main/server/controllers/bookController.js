@@ -1,5 +1,13 @@
 import asyncHandler from 'express-async-handler';
 import Book from '../models/Book.js';
+import User from '../models/User.js';
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // @desc    Fetch all books
 // @route   GET /api/books
@@ -68,7 +76,7 @@ const createBook = asyncHandler(async (req, res) => {
         price: 0,
         user: req.user._id,
         coverImage: '/images/sample.jpg',
-        image_url: '', // Will be set by admin
+
         category: 'Sample category',
         stock: 0,
         rating: 0,
@@ -90,7 +98,7 @@ const updateBook = asyncHandler(async (req, res) => {
         price,
         description,
         coverImage,
-        image_url,
+
         category,
         stock,
         author,
@@ -104,6 +112,7 @@ const updateBook = asyncHandler(async (req, res) => {
         pages,
         language,
         publishedDate,
+        publisher,
         genre
     } = req.body;
 
@@ -112,18 +121,16 @@ const updateBook = asyncHandler(async (req, res) => {
     if (book) {
         // Validate: Ensure at least one image source is provided
         const finalCoverImage = coverImage || book.coverImage;
-        const finalImageUrl = image_url !== undefined ? image_url : book.image_url;
 
-        if (!finalCoverImage && !finalImageUrl) {
+        if (!finalCoverImage) {
             res.status(400);
-            throw new Error('Please provide at least one image source: coverImage or image_url');
+            throw new Error('Please provide a coverImage');
         }
 
         book.title = title || book.title;
         book.price = price !== undefined ? price : book.price;
         book.description = description || book.description;
         book.coverImage = finalCoverImage;
-        book.image_url = finalImageUrl;
         book.category = category || book.category;
         book.stock = stock !== undefined ? stock : book.stock;
         book.author = author || book.author;
@@ -141,6 +148,7 @@ const updateBook = asyncHandler(async (req, res) => {
         book.pages = pages !== undefined ? pages : book.pages;
         book.language = language || book.language;
         book.publishedDate = publishedDate || book.publishedDate;
+        book.publisher = publisher || book.publisher;
         book.genre = genre || book.genre;
 
         const updatedBook = await book.save();
@@ -192,4 +200,119 @@ const createProductReview = asyncHandler(async (req, res) => {
     }
 });
 
-export { getBooks, getBookById, deleteBook, createBook, updateBook, createProductReview };
+// @desc    Get public site stats (books count, unique authors, total users)
+// @route   GET /api/books/stats
+// @access  Public
+const getSiteStats = asyncHandler(async (req, res) => {
+    const [totalBooks, authors, totalUsers] = await Promise.all([
+        Book.countDocuments({}),
+        Book.distinct('author'),
+        User.countDocuments({}),
+    ]);
+    res.json({
+        totalBooks,
+        totalAuthors: authors.length,
+        totalUsers,
+    });
+});
+
+// @desc    Generate book covers automatically using Antigravity API
+// @route   POST /api/books/generate-covers
+// @access  Private/Admin
+const generateCovers = asyncHandler(async (req, res) => {
+    // 1. Identify Books Missing Covers
+    const books = await Book.find({
+        $or: [
+            { coverImage: { $in: [null, ''] } },
+            { coverImage: /unsplash.com/i },
+            { coverImage: /\/images\/sample.jpg/i },
+            { coverImage: { $exists: false } }
+        ]
+    });
+
+    if (books.length === 0) {
+        return res.json({ message: 'No books found that require a cover image update.', updatedCount: 0 });
+    }
+
+    const apiUrl = process.env.ANTIGRAVITY_API_URL || 'https://api.antigravity.ai/generate-image';
+
+    // 7. Batch Processing
+    const batchSize = 10;
+    let updatedCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
+    // Ensure uploads directory exists
+    const uploadsDir = path.join(__dirname, '..', 'uploads', 'book-covers');
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    for (let i = 0; i < books.length; i += batchSize) {
+        const batch = books.slice(i, i + batchSize);
+
+        await Promise.all(batch.map(async (book) => {
+            try {
+                // 2. Generate Image Prompt
+                const genreStr = book.genre || book.category || 'general';
+                const prompt = `Professional book cover for ${book.title} by ${book.author}, genre ${genreStr}`;
+
+                // 3. Call Antigravity API
+                let imageUrl;
+                try {
+                    const response = await axios.post(apiUrl, {
+                        prompt,
+                        size: '1024x1024'
+                    });
+                    imageUrl = response.data.image_url;
+                } catch (apiError) {
+                    console.error(`API call failed for ${book.title}:`, apiError.message);
+                    // Mock fallback if external URL is a placeholder/unreachable
+                    imageUrl = `https://placehold.co/1024x1024/1e293b/f8fafc.png?text=${encodeURIComponent(book.title)}`;
+                }
+
+                if (!imageUrl) throw new Error("No image_url returned from API");
+
+                // 4. Download and Store Image
+                const imageResponse = await axios({
+                    url: imageUrl,
+                    method: 'GET',
+                    responseType: 'stream'
+                });
+
+                const extension = imageUrl.split('.').pop().split('?')[0] || 'jpg';
+                const ext = ['jpg', 'jpeg', 'png', 'webp'].includes(extension.toLowerCase()) ? extension : 'jpg';
+                const fileName = `${book._id}.${ext}`;
+                const filePath = path.join(uploadsDir, fileName);
+
+                const writer = fs.createWriteStream(filePath);
+                imageResponse.data.pipe(writer);
+
+                await new Promise((resolve, reject) => {
+                    writer.on('finish', resolve);
+                    writer.on('error', reject);
+                });
+
+                // 6. Update Database
+                book.coverImage = `/uploads/book-covers/${fileName}`;
+                book.image_url = `/uploads/book-covers/${fileName}`;
+                await book.save();
+                updatedCount++;
+            } catch (err) {
+                console.error(`Error processing book ${book._id}:`, err.message);
+                failedCount++;
+                errors.push({ bookId: book._id, title: book.title, error: err.message });
+            }
+        }));
+    }
+
+    res.json({
+        message: 'Cover generation process completed.',
+        totalProcessed: books.length,
+        updatedCount,
+        failedCount,
+        errors
+    });
+});
+
+export { getBooks, getBookById, deleteBook, createBook, updateBook, createProductReview, getSiteStats, generateCovers };

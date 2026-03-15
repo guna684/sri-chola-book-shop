@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { Package, ShoppingBag, Users, BookOpen, DollarSign, MessageSquare, TrendingUp, ArrowRight, Loader2 } from 'lucide-react';
+import { Package, ShoppingBag, Users, BookOpen, DollarSign, MessageSquare, TrendingUp, ArrowRight, Loader2, Truck, Settings } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { useAuth } from '@/context/AuthContext';
 import { motion, Variants } from 'framer-motion';
@@ -110,7 +110,7 @@ const Dashboard = () => {
                 return newValue;
             });
 
-            toast.success('Dashboard updated with latest order data');
+            toast.success(t('admin.dashboard.orderDataUpdated'));
         };
 
         window.addEventListener('orderDelivered', handleOrderDelivered);
@@ -120,6 +120,17 @@ const Dashboard = () => {
             console.log('🔴 Dashboard: Removing event listener');
             window.removeEventListener('orderDelivered', handleOrderDelivered);
         };
+    }, []);
+
+    // Set up auto-refresh polling every 60 seconds
+    useEffect(() => {
+        const POLL_INTERVAL = 60 * 1000; // 60 seconds
+        const intervalId = setInterval(() => {
+            console.log('🔄 Dashboard: Auto-refreshing data...');
+            setRefreshTrigger(prev => prev + 1);
+        }, POLL_INTERVAL);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     const statCards = [
@@ -179,7 +190,7 @@ const Dashboard = () => {
                         {/* Date Filter */}
                         <div className="flex items-center gap-2 bg-card p-2 rounded-lg border border-border shadow-sm">
                             <div className="flex flex-col">
-                                <label className="text-[10px] text-muted-foreground ml-1">{t('admin.dashboard.dateFilter.from')}</label>
+                                <label className="text-[10px] text-muted-foreground ml-1">{t('admin.common.from')}</label>
                                 <input
                                     type="date"
                                     className="bg-transparent text-sm p-1 outline-none"
@@ -192,7 +203,7 @@ const Dashboard = () => {
                             </div>
                             <div className="h-8 w-[1px] bg-border"></div>
                             <div className="flex flex-col">
-                                <label className="text-[10px] text-muted-foreground ml-1">{t('admin.dashboard.dateFilter.to')}</label>
+                                <label className="text-[10px] text-muted-foreground ml-1">{t('admin.common.to')}</label>
                                 <input
                                     type="date"
                                     className="bg-transparent text-sm p-1 outline-none"
@@ -294,6 +305,17 @@ const Dashboard = () => {
                                         </div>
                                         <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                                     </Link>
+
+                                    <Link to="/admin/delivery-pricing" className="bg-card hover:bg-accent/5 border border-border p-4 rounded-xl shadow-sm flex items-center gap-4 transition-all group">
+                                        <div className="bg-green-500/10 p-3 rounded-full text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                                            <Truck className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-semibold">{t('admin.dashboard.deliveryPricing')}</h3>
+                                            <p className="text-xs text-muted-foreground">{t('admin.dashboard.deliveryPricingDesc')}</p>
+                                        </div>
+                                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                                    </Link>
                                 </div>
                             </motion.div>
 
@@ -321,67 +343,58 @@ const Dashboard = () => {
                         </div>
                     </motion.div>
 
-                        {/* Analytics Charts Section */}
-                        <motion.div variants={itemVariants} className="mt-10">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                                <div>
-                                    <h2 className="text-2xl font-bold font-serif text-foreground">{t('admin.dashboard.analytics.title')}</h2>
-                                    <p className="text-sm text-muted-foreground mt-1">{t('admin.dashboard.analytics.subtitle')}</p>
-                                </div>
-
-                                {/* Category Filter */}
-                                <div className="flex items-center gap-2">
-                                    <label className="text-sm font-medium text-muted-foreground">{t('admin.dashboard.analytics.filterByCategory')}:</label>
-                                    <select
-                                        value={categoryFilter}
-                                        onChange={(e) => setCategoryFilter(e.target.value)}
-                                        className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        <option value="">{t('admin.dashboard.analytics.allCategories')}</option>
-                                        <option value="Fiction">{t('categories.fiction')}</option>
-                                        <option value="Non-Fiction">{t('categories.non-fiction')}</option>
-                                        <option value="Science">{t('categories.sci-fi')}</option>
-                                        <option value="Technology">Technology</option>
-                                        <option value="History">History</option>
-                                        <option value="Biography">{t('categories.biography')}</option>
-                                        <option value="Self-Help">{t('categories.self-help')}</option>
-                                        <option value="Children">{t('categories.childrens')}</option>
-                                        <option value="Romance">{t('categories.romance')}</option>
-                                        <option value="Mystery">{t('categories.mystery')}</option>
-                                    </select>
-                                </div>
+                    {/* Analytics Charts Section */}
+                    <motion.div variants={itemVariants} className="mt-10">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                            <div>
+                                <h2 className="text-2xl font-bold font-serif text-foreground">{t('admin.dashboard.analytics.title')}</h2>
+                                <p className="text-sm text-muted-foreground mt-1">{t('admin.dashboard.analytics.subtitle')}</p>
                             </div>
 
-                            {/* Charts Grid */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {/* Row 1 */}
-                                <TopSellingChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
-                                <CategorySalesChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
-                                <RevenueCategoryChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
-
-                                {/* Row 2 */}
-                                <MonthlyTrendsChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
-                                <StockVsSalesChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
-                                <RevenueByProductChart
-                                    refreshTrigger={refreshTrigger}
-                                    dateRange={dateRange}
-                                    categoryFilter={categoryFilter}
-                                />
+                            {/* Category Filter */}
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm font-medium text-muted-foreground">{t('admin.dashboard.analytics.filterByCategory')}:</label>
+                                <select
+                                    value={categoryFilter}
+                                    onChange={(e) => setCategoryFilter(e.target.value)}
+                                    className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                >
+                                    <option value="">{t('admin.dashboard.analytics.allCategories')}</option>
+                                    <option value="Fiction">{t('categories.fiction')}</option>
+                                    <option value="Non-Fiction">{t('categories.non-fiction')}</option>
+                                    <option value="Science">{t('categories.sci-fi')}</option>
+                                    <option value="Technology">{t('categories.technology')}</option>
+                                    <option value="History">{t('categories.history')}</option>
+                                    <option value="Biography">{t('categories.biography')}</option>
+                                    <option value="Self-Improvement">{t('categories.self-improvement')}</option>
+                                    <option value="Children">{t('categories.childrens')}</option>
+                                    <option value="Romance">{t('categories.romance')}</option>
+                                    <option value="Mystery">{t('categories.mystery')}</option>
+                                </select>
                             </div>
+                        </div>
 
-                            {/* Low Stock Alerts - Full Width */}
-                            <div className="mt-6">
-                                <LowStockAlertsChart
-                                    refreshTrigger={refreshTrigger}
-                                    categoryFilter={categoryFilter}
-                                />
-                            </div>
-                        </motion.div>
+                        {/* Charts Grid - Temporarily Disabled */}
+                        {/* Charts Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <TopSellingChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
+                            <CategorySalesChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
+                            <RevenueCategoryChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
+                            <MonthlyTrendsChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
+                            <StockVsSalesChart refreshTrigger={refreshTrigger} dateRange={dateRange} />
+                            <RevenueByProductChart refreshTrigger={refreshTrigger} dateRange={dateRange} categoryFilter={categoryFilter} />
+                        </div>
 
-                    </>
-                )}
-            </div >
-        </AdminLayout >
+                        {/* Low Stock Alerts */}
+                        <div className="mt-6">
+                            <LowStockAlertsChart refreshTrigger={refreshTrigger} categoryFilter={categoryFilter} />
+                        </div>
+                    </motion.div>
+
+                </>
+            )}
+        </div>
+    </AdminLayout>
     );
 };
 

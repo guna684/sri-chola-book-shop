@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import api from '@/lib/axios';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const StockVsSalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: number; dateRange?: { start: string; end: string } }) => {
+    const { t } = useTranslation();
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -56,7 +58,7 @@ const StockVsSalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: num
         return (
             <div className="h-[350px] flex flex-col items-center justify-center bg-card rounded-xl border border-border text-muted-foreground">
                 <AlertCircle className="h-10 w-10 mb-2 opacity-50" />
-                <p>No comparative data available</p>
+                <p>{t('admin.dashboard.charts.stockVsSales.noData')}</p>
             </div>
         );
     }
@@ -68,10 +70,10 @@ const StockVsSalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: num
                     <p className="text-sm font-medium mb-2 text-foreground">{label}</p>
                     <div className="space-y-1">
                         <p className="text-xs text-green-600 flex justify-between gap-4">
-                            <span>Sold:</span> <span className="font-bold">{payload[0].value}</span>
+                            <span>{t('admin.dashboard.charts.stockVsSales.sold')}:</span> <span className="font-bold">{payload[0].value}</span>
                         </p>
                         <p className="text-xs text-blue-600 flex justify-between gap-4">
-                            <span>Stock:</span> <span className="font-bold">{payload[1].value}</span>
+                            <span>{t('admin.dashboard.charts.stockVsSales.stock')}:</span> <span className="font-bold">{payload[1].value}</span>
                         </p>
                     </div>
                 </div>
@@ -82,8 +84,8 @@ const StockVsSalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: num
 
     return (
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="font-serif text-lg font-bold text-foreground mb-1">Supply vs Demand</h3>
-            <p className="text-xs text-muted-foreground mb-6">Inventory levels compared with sales volume</p>
+            <h3 className="font-serif text-lg font-bold text-foreground mb-1">{t('admin.dashboard.charts.stockVsSales.title')}</h3>
+            <p className="text-xs text-muted-foreground mb-6">{t('admin.dashboard.charts.stockVsSales.subtitle')}</p>
 
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -102,8 +104,8 @@ const StockVsSalesChart = ({ refreshTrigger, dateRange }: { refreshTrigger?: num
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.2)' }} />
                         <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }} />
-                        <Bar dataKey="Sales" fill="#22c55e" radius={[4, 4, 0, 0]} name="Units Sold" barSize={20} />
-                        <Bar dataKey="Stock" fill="#3b82f6" radius={[4, 4, 0, 0]} name="In Stock" barSize={20} />
+                        <Bar dataKey="Sales" fill="#22c55e" radius={[4, 4, 0, 0]} name={t('admin.dashboard.charts.stockVsSales.unitsSold')} barSize={20} />
+                        <Bar dataKey="Stock" fill="#3b82f6" radius={[4, 4, 0, 0]} name={t('admin.dashboard.charts.stockVsSales.inStock')} barSize={20} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

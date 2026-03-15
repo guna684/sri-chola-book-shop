@@ -7,6 +7,7 @@ export interface Message {
     sender: 'user' | 'bot';
     text: string;
     timestamp: Date;
+    bookIds?: string[];
 }
 
 interface Order {
@@ -34,7 +35,11 @@ interface ChatContextType {
     orderContext: Order[] | null;
     currentPage: string;
     isLoading: boolean;
+    hasMoreHistory: boolean;
     sendMessage: (text: string) => Promise<void>;
+    fetchHistory: () => Promise<void>;
+    fetchOlderMessages: () => Promise<void>;
+    clearChat: () => Promise<void>;
     injectOrderContext: (orders: Order[]) => void;
     updatePageContext: (page: string) => void;
     clearSession: () => void;
@@ -68,57 +73,102 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
     const [orderContext, setOrderContext] = useState<Order[] | null>(null);
     const [currentPage, setCurrentPage] = useState<string>('home');
     const [isLoading, setIsLoading] = useState(false);
+    const [hasMoreHistory, setHasMoreHistory] = useState(false);
 
-    // Initialize session ID based on user
+    const fetchHistory = useCallback(async () => {
+        if (!user) return;
+        try {
+            const config = { headers: { Authorization: `Bearer ${user.token}` } };
+            const { data } = await api.get('/api/chat/history', config);
+            
+            if (data && data.length > 0) {
+                const formattedMessages: Message[] = [];
+                data.forEach((item: any) => {
+                    formattedMessages.push({
+                        id: `u_${item._id}`,
+                        sender: 'user',
+                        text: item.message,
+                        timestamp: new Date(item.timestamp)
+                    });
+                    formattedMessages.push({
+                        id: `b_${item._id}`,
+                        sender: 'bot',
+                        text: item.response,
+                        timestamp: new Date(item.timestamp)
+                    });
+                });
+                
+                setMessages(formattedMessages);
+                setHasMoreHistory(data.length === 10);
+            }
+        } catch (error) {
+            console.error('[ChatContext] Error fetching history:', error);
+        }
+    }, [user]);
+
+    // Initial load and session ID initialization
     useEffect(() => {
         if (user) {
             const newSessionId = `chat_${user._id}`;
             setSessionId(newSessionId);
-            loadChatHistory(newSessionId);
+            fetchHistory();
         } else {
-            // Guest session
-            const guestSessionId = `chat_guest_${Date.now()}`;
-            setSessionId(guestSessionId);
-            loadChatHistory(guestSessionId);
+            clearSession();
+            setSessionId(`chat_guest_${Date.now()}`);
         }
-    }, [user]);
+    }, [user, fetchHistory]);
 
-    // Load chat history from localStorage
-    const loadChatHistory = (sessionId: string) => {
+    const fetchOlderMessages = async () => {
+        if (!user) return;
         try {
-            const storedHistory = localStorage.getItem(`chat_history_${sessionId}`);
-            if (storedHistory) {
-                const parsed = JSON.parse(storedHistory);
-                // Convert timestamp strings back to Date objects
-                const messagesWithDates = parsed.map((msg: any) => ({
-                    ...msg,
-                    timestamp: new Date(msg.timestamp),
-                }));
-                setMessages(messagesWithDates);
-                console.log('[ChatContext] Loaded chat history:', messagesWithDates.length, 'messages');
+            setIsLoading(true);
+            const currentMessagesCount = messages.filter(m => m.sender === 'user').length;
+            const config = { headers: { Authorization: `Bearer ${user.token}` } };
+            const { data } = await api.get(`/api/chat/history/older?skip=${currentMessagesCount}`, config);
+            
+            if (data && data.length > 0) {
+                const olderMessages: Message[] = [];
+                data.forEach((item: any) => {
+                    olderMessages.push({
+                        id: `u_${item._id}`,
+                        sender: 'user',
+                        text: item.message,
+                        timestamp: new Date(item.timestamp)
+                    });
+                    olderMessages.push({
+                        id: `b_${item._id}`,
+                        sender: 'bot',
+                        text: item.response,
+                        timestamp: new Date(item.timestamp)
+                    });
+                });
+                
+                setMessages(prev => [...olderMessages, ...prev]);
+                setHasMoreHistory(data.length === 10);
+            } else {
+                setHasMoreHistory(false);
             }
         } catch (error) {
-            console.error('[ChatContext] Error loading chat history:', error);
+            console.error('[ChatContext] Error fetching older history:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    // Save chat history to localStorage
-    const saveChatHistory = useCallback((msgs: Message[]) => {
-        if (!sessionId) return;
+    const clearChat = async () => {
+        if (!user) {
+            clearSession();
+            return;
+        }
         try {
-            localStorage.setItem(`chat_history_${sessionId}`, JSON.stringify(msgs));
-            console.log('[ChatContext] Saved chat history:', msgs.length, 'messages');
+            const config = { headers: { Authorization: `Bearer ${user.token}` } };
+            await api.delete('/api/chat/history', config);
+            clearSession();
+            setHasMoreHistory(false);
         } catch (error) {
-            console.error('[ChatContext] Error saving chat history:', error);
+            console.error('[ChatContext] Error clearing history:', error);
         }
-    }, [sessionId]);
-
-    // Auto-save whenever messages change
-    useEffect(() => {
-        if (messages.length > 1) { // Don't save just the initial bot message
-            saveChatHistory(messages);
-        }
-    }, [messages, saveChatHistory]);
+    };
 
     // Send message with full context
     const sendMessage = async (text: string) => {
@@ -177,16 +227,22 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
 
             // Handle various n8n response formats
             let botText = "I received your message but couldn't parse the response.";
+            let botBookIds: string[] | undefined;
             if (typeof response.data === 'string') {
                 botText = response.data;
-            } else if (response.data.text) {
-                botText = response.data.text;
-            } else if (response.data.message) {
-                botText = response.data.message;
-            } else if (response.data.output) {
-                botText = response.data.output;
             } else {
-                botText = JSON.stringify(response.data);
+                if (response.data.text) {
+                    botText = response.data.text;
+                } else if (response.data.message) {
+                    botText = response.data.message;
+                } else if (response.data.output) {
+                    botText = response.data.output;
+                } else {
+                    botText = JSON.stringify(response.data);
+                }
+                if (response.data.bookIds && Array.isArray(response.data.bookIds)) {
+                    botBookIds = response.data.bookIds;
+                }
             }
 
             const botMsg: Message = {
@@ -194,6 +250,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
                 sender: 'bot',
                 text: botText,
                 timestamp: new Date(),
+                bookIds: botBookIds
             };
             setMessages((prev) => [...prev, botMsg]);
 
@@ -236,7 +293,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         setOrderContext(null);
         setCurrentPage('home');
         if (sessionId) {
-            localStorage.removeItem(`chat_history_${sessionId}`);
+            // No need to clear local storage as we moved to DB
         }
         console.log('[ChatContext] Cleared session');
     };
@@ -247,7 +304,11 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         orderContext,
         currentPage,
         isLoading,
+        hasMoreHistory,
         sendMessage,
+        fetchHistory,
+        fetchOlderMessages,
+        clearChat,
         injectOrderContext,
         updatePageContext,
         clearSession,

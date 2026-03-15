@@ -1,15 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, ShoppingCart, Heart } from 'lucide-react';
+import { Star, ShoppingCart, Heart, BookOpen } from 'lucide-react';
 import { Book } from '@/types/book';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { Badge } from '@/components/ui/badge';
-
 import { useTranslation } from 'react-i18next';
 import { getLocalized } from '@/utils/localization';
-import { getImageUrl } from '@/utils/imageUrl';
+import { getImageFallbackChain } from '@/utils/imageUrl';
 
 interface BookCardProps {
   book: Book;
@@ -20,6 +20,20 @@ const BookCard = ({ book, index = 0 }: BookCardProps) => {
   const { i18n } = useTranslation();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
+  // Build the ordered list of image URLs to try
+  const fallbackChain = getImageFallbackChain(book.image_url, book.coverImage, book.isbn);
+  const [imgIndex, setImgIndex] = useState(0);
+  const [imgFailed, setImgFailed] = useState(false);
+
+  const handleImgError = () => {
+    const next = imgIndex + 1;
+    if (next < fallbackChain.length) {
+      setImgIndex(next);
+    } else {
+      setImgFailed(true);
+    }
+  };
 
   const discount = book.originalPrice
     ? Math.round(((book.originalPrice - book.price) / book.originalPrice) * 100)
@@ -47,11 +61,10 @@ const BookCard = ({ book, index = 0 }: BookCardProps) => {
       </div>
 
       {/* Wishlist Button */}
-      {/* Wishlist Button */}
       <button
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation(); // Prevent navigating to book details
+          e.stopPropagation();
           if (isInWishlist(book.id)) {
             removeFromWishlist(book.id);
           } else {
@@ -67,23 +80,26 @@ const BookCard = ({ book, index = 0 }: BookCardProps) => {
       </button>
 
       {/* Cover Image */}
-      <Link to={`/book/${book.id}`} className="block relative overflow-hidden aspect-[3/4]">
-        <img
-          src={getImageUrl(book.image_url || book.coverImage)}
-          alt={getLocalized(book, 'title', i18n.language)}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          onError={(e) => {
-            // Fallback logic
-            const target = e.target as HTMLImageElement;
-            if (book.image_url && target.src === getImageUrl(book.image_url)) {
-              // If image_url failed, try coverImage
-              target.src = getImageUrl(book.coverImage);
-            } else if (!target.src.includes('placeholder-book.jpg')) {
-              // Final fallback to placeholder
-              target.src = '/images/placeholder-book.jpg';
-            }
-          }}
-        />
+      <Link to={`/book/${book.id}`} className="block relative overflow-hidden aspect-[3/4] bg-muted">
+        {imgFailed ? (
+          /* All sources exhausted — show a nice placeholder */
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted text-muted-foreground gap-3 p-4">
+            <div className="bg-muted-foreground/10 rounded-full p-4">
+              <BookOpen className="h-10 w-10 opacity-40" />
+            </div>
+            <span className="text-xs font-medium opacity-50 text-center line-clamp-2">
+              {getLocalized(book, 'title', i18n.language)}
+            </span>
+          </div>
+        ) : (
+          <img
+            key={imgIndex}
+            src={fallbackChain[imgIndex]}
+            alt={getLocalized(book, 'title', i18n.language)}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={handleImgError}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </Link>
 
@@ -120,7 +136,7 @@ const BookCard = ({ book, index = 0 }: BookCardProps) => {
             <span className="text-lg font-bold text-foreground">
               ₹{book.price}
             </span>
-            {book.originalPrice && (
+            {book.originalPrice && book.originalPrice > book.price && (
               <span className="text-sm text-muted-foreground line-through">
                 ₹{book.originalPrice}
               </span>
