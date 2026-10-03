@@ -42,7 +42,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = useCallback((book: Book, quantity = 1) => {
     setItems(prev => {
+      const maxStock = book.stock ?? 999;
+      if (maxStock <= 0) {
+        toast.error(`"${book.title}" is out of stock`);
+        return prev;
+      }
       const existingItem = prev.find(item => item.book.id === book.id);
+      const currentQty = existingItem ? existingItem.quantity : 0;
+      if (currentQty + quantity > maxStock) {
+        toast.error(`Cannot add more. Only ${maxStock} copies of "${book.title}" available in stock`);
+        return prev;
+      }
       if (existingItem) {
         toast.success(`Updated "${book.title}" quantity in cart`);
         return prev.map(item =>
@@ -72,9 +82,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     setItems(prev =>
-      prev.map(item =>
-        item.book.id === bookId ? { ...item, quantity } : item
-      )
+      prev.map(item => {
+        if (item.book.id === bookId) {
+          const maxStock = item.book.stock ?? 999;
+          if (quantity > maxStock) {
+            toast.error(`Only ${maxStock} copies of "${item.book.title}" available in stock`);
+            return { ...item, quantity: maxStock };
+          }
+          return { ...item, quantity };
+        }
+        return item;
+      })
     );
   }, [removeFromCart]);
 

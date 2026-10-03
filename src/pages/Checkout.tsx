@@ -159,7 +159,7 @@ const Checkout = () => {
 
               toast.success(t('checkout.messages.success'));
               clearCart();
-              navigate('/');
+              navigate('/orders');
             } catch (err) {
               console.error(err);
               toast.error('Payment verification failed');
@@ -192,7 +192,7 @@ const Checkout = () => {
         // COD
         toast.success(t('checkout.messages.orderPlaced'));
         clearCart();
-        navigate('/');
+        navigate('/orders');
       }
 
     } catch (error: any) {

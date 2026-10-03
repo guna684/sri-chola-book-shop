@@ -142,7 +142,9 @@ const Cart = () => {
                           <span className="w-8 text-center font-semibold">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.book.id, item.quantity + 1)}
-                            className="h-8 w-8 rounded-md hover:bg-card flex items-center justify-center"
+                            disabled={item.quantity >= (item.book.stock ?? 999)}
+                            className="h-8 w-8 rounded-md hover:bg-card flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                            title={item.quantity >= (item.book.stock ?? 999) ? "Max stock reached" : "Add one"}
                           >
                             <Plus className="h-4 w-4" />
                           </button>
@@ -168,7 +170,9 @@ const Cart = () => {
                         <span className="w-8 text-center font-semibold">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.book.id, item.quantity + 1)}
-                          className="h-8 w-8 rounded-md hover:bg-card flex items-center justify-center"
+                          disabled={item.quantity >= (item.book.stock ?? 999)}
+                          className="h-8 w-8 rounded-md hover:bg-card flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={item.quantity >= (item.book.stock ?? 999) ? "Max stock reached" : "Add one"}
                         >
                           <Plus className="h-4 w-4" />
                         </button>

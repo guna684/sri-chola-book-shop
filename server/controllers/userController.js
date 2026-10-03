@@ -9,8 +9,9 @@ import crypto from 'crypto';
 // @access  Public
 const authUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (user && (await user.matchPassword(password))) {
         res.json({
@@ -32,8 +33,9 @@ const authUser = asyncHandler(async (req, res) => {
 // @access  Public
 const authAdmin = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (user && (await user.matchPassword(password))) {
         if (!user.isAdmin) {
@@ -59,8 +61,9 @@ const authAdmin = asyncHandler(async (req, res) => {
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: normalizedEmail });
 
     if (userExists) {
         res.status(400);
@@ -68,8 +71,8 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const user = await User.create({
-        name,
-        email,
+        name: name ? name.trim() : '',
+        email: normalizedEmail,
         password,
     });
 
@@ -205,7 +208,8 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
 // @access  Public
 const forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
         res.status(404);
@@ -279,9 +283,11 @@ const verifyOTP = asyncHandler(async (req, res) => {
         .update(otp)
         .digest('hex');
 
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
+
     // Find user with matching OTP and check expiry
     const user = await User.findOne({
-        email,
+        email: normalizedEmail,
         resetPasswordOTP: hashedOTP,
         resetPasswordOTPExpire: { $gt: Date.now() }
     });
@@ -409,7 +415,8 @@ const updateUser = asyncHandler(async (req, res) => {
 // @access  Public
 const checkUserExists = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    const normalizedEmail = email ? email.trim().toLowerCase() : '';
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (user) {
         res.status(200).json({ exists: true, message: 'User found', name: user.name });

@@ -81,7 +81,8 @@ const addOrderItems = asyncHandler(async (req, res) => {
             validatedDiscount = discountResult.discount;
         }
 
-        // Check stock and deduct
+        // 1. Verify all books exist and have sufficient stock BEFORE deducting any
+        const booksToUpdate = [];
         for (const item of orderItems) {
             const book = await Book.findById(item.product);
             if (!book) {
@@ -90,9 +91,14 @@ const addOrderItems = asyncHandler(async (req, res) => {
             }
             if (book.stock < item.qty) {
                 res.status(400);
-                throw new Error(`Not enough stock for ${item.title}`);
+                throw new Error(`Not enough stock for "${item.title}". Only ${book.stock} available.`);
             }
-            book.stock -= item.qty;
+            booksToUpdate.push({ book, qty: item.qty });
+        }
+
+        // 2. Safely deduct stock after ALL items are verified
+        for (const { book, qty } of booksToUpdate) {
+            book.stock -= qty;
             await book.save();
         }
 
@@ -249,6 +255,18 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     });
 });
 
+// Helper to restore book stock when an order is cancelled
+const restoreOrderStock = async (orderItems) => {
+    if (!orderItems || !orderItems.length) return;
+    for (const item of orderItems) {
+        if (item.product) {
+            await Book.findByIdAndUpdate(item.product, {
+                $inc: { stock: item.qty }
+            });
+        }
+    }
+};
+
 // @desc    Cancel order (User)
 // @route   PUT /api/orders/:id/cancel
 // @access  Private
@@ -266,9 +284,13 @@ const cancelOrder = asyncHandler(async (req, res) => {
             throw new Error(`Cannot cancel order that is ${order.status}`);
         }
 
+        if (order.status !== 'Cancelled') {
+            await restoreOrderStock(order.orderItems);
+        }
+
         order.status = 'Cancelled';
-        // Optional: refund logic here or manual process
-        // Optional: restore stock
+        order.cancelledAt = new Date();
+        order.cancelledBy = req.user.isAdmin ? 'admin' : 'user';
 
         const updatedOrder = await order.save();
         res.json(updatedOrder);
@@ -286,9 +308,10 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
     if (order) {
         const oldStatus = order.status;
-        order.status = req.body.status;
+        const newStatus = req.body.status;
+        order.status = newStatus;
 
-        if (req.body.status === 'Delivered') {
+        if (newStatus === 'Delivered') {
             order.isDelivered = true;
             order.deliveredAt = Date.now();
             // Auto-mark as paid for COD orders when delivered
@@ -301,6 +324,22 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
             console.log('   New Status:', order.status);
             console.log('   isPaid:', order.isPaid);
             console.log('   Total Price:', order.totalPrice);
+        }
+
+        // Handle inventory adjustments when admin changes status to/from Cancelled
+        if (oldStatus !== 'Cancelled' && newStatus === 'Cancelled') {
+            await restoreOrderStock(order.orderItems);
+            order.cancelledAt = new Date();
+            order.cancelledBy = 'admin';
+        } else if (oldStatus === 'Cancelled' && newStatus !== 'Cancelled') {
+            // Re-deduct stock if reactivated
+            for (const item of order.orderItems) {
+                if (item.product) {
+                    await Book.findByIdAndUpdate(item.product, {
+                        $inc: { stock: -item.qty }
+                    });
+                }
+            }
         }
 
         const updatedOrder = await order.save();
@@ -401,6 +440,10 @@ const confirmCancellation = asyncHandler(async (req, res) => {
     }
     if (order.refundStatus || order.cancellationCharge != null) {
         res.status(400); throw new Error('Cancellation already initiated for this order');
+    }
+
+    if (order.status !== 'Cancelled') {
+        await restoreOrderStock(order.orderItems);
     }
 
     order.status = 'Cancelled';
