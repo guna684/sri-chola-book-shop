@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Check, X, Edit, IndianRupee, Search, Trash2, Eye, Loader2, Package } from 'lucide-react';
+import { Check, X, Edit, IndianRupee, Search, Trash2, Eye, Loader2, Package, Calendar, RotateCcw, Filter } from 'lucide-react';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -47,8 +47,12 @@ const OrderList = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
 
-    // Search state
+    // Search & Filter state
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [datePreset, setDatePreset] = useState('all'); // 'all', 'today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'custom'
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     // Status Update Dialog State
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -235,6 +239,95 @@ const OrderList = () => {
         }
     };
 
+    // Helper to check if two dates are on the same calendar day
+    const isSameDay = (d1: Date, d2: Date) =>
+        d1.getFullYear() === d2.getFullYear() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getDate() === d2.getDate();
+
+    // Filter orders by search term, status, and date range
+    const filteredOrders = orders.filter((order: any) => {
+        // 1. Search filter
+        if (searchTerm.trim()) {
+            const query = searchTerm.toLowerCase().trim();
+            const orderIdMatch = order._id?.toLowerCase().includes(query);
+            const userNameMatch = order.user?.name?.toLowerCase().includes(query);
+            const userEmailMatch = order.user?.email?.toLowerCase().includes(query);
+            const addressMatch = order.shippingAddress?.address?.toLowerCase().includes(query);
+            const cityMatch = order.shippingAddress?.city?.toLowerCase().includes(query);
+            const postalMatch = order.shippingAddress?.postalCode?.includes(query);
+            const contactMatch = order.shippingAddress?.deliveryContactNumber?.includes(query);
+
+            if (!orderIdMatch && !userNameMatch && !userEmailMatch && !addressMatch && !cityMatch && !postalMatch && !contactMatch) {
+                return false;
+            }
+        }
+
+        // 2. Status filter
+        if (statusFilter !== 'all' && order.status !== statusFilter) {
+            return false;
+        }
+
+        // 3. Date filter
+        if (!order.createdAt) return true;
+        const orderDate = new Date(order.createdAt);
+        if (isNaN(orderDate.getTime())) return true;
+
+        const now = new Date();
+
+        if (datePreset === 'today') {
+            if (!isSameDay(orderDate, now)) return false;
+        } else if (datePreset === 'yesterday') {
+            const yesterday = new Date();
+            yesterday.setDate(now.getDate() - 1);
+            if (!isSameDay(orderDate, yesterday)) return false;
+        } else if (datePreset === 'last7days') {
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(now.getDate() - 7);
+            sevenDaysAgo.setHours(0, 0, 0, 0);
+            if (orderDate < sevenDaysAgo) return false;
+        } else if (datePreset === 'last30days') {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(now.getDate() - 30);
+            thirtyDaysAgo.setHours(0, 0, 0, 0);
+            if (orderDate < thirtyDaysAgo) return false;
+        } else if (datePreset === 'thisMonth') {
+            if (orderDate.getFullYear() !== now.getFullYear() || orderDate.getMonth() !== now.getMonth()) {
+                return false;
+            }
+        }
+
+        // Custom Date Range (or if start/end date explicitly provided)
+        if (startDate) {
+            const [y, m, d] = startDate.split('-').map(Number);
+            const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+            if (orderDate < start) return false;
+        }
+        if (endDate) {
+            const [y, m, d] = endDate.split('-').map(Number);
+            const end = new Date(y, m - 1, d, 23, 59, 59, 999);
+            if (orderDate > end) return false;
+        }
+
+        return true;
+    });
+
+    const handleResetFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setDatePreset('all');
+        setStartDate('');
+        setEndDate('');
+    };
+
+    const hasActiveFilters = Boolean(
+        searchTerm.trim() ||
+        statusFilter !== 'all' ||
+        datePreset !== 'all' ||
+        startDate ||
+        endDate
+    );
+
     return (
         <AdminLayout>
             <Helmet>
@@ -242,17 +335,135 @@ const OrderList = () => {
             </Helmet>
 
             <div className="w-full">
-                <h1 className="text-3xl font-bold font-serif mb-6">{t('admin.orders.title')}</h1>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+                    <h1 className="text-3xl font-bold">{t('admin.orders.title')}</h1>
+                    <div className="text-xs text-muted-foreground">
+                        Total Orders: <span className="font-semibold text-foreground">{orders.length}</span>
+                    </div>
+                </div>
 
-                {/* Search Bar */}
-                <div className="relative mb-4 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by Order ID..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                    />
+                {/* Search & Filter Toolbar */}
+                <div className="bg-card p-4 rounded-xl border border-border shadow-sm mb-6 space-y-4">
+                    <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                        {/* Search Bar */}
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search by Order ID, customer, city..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
+
+                        {/* Status Filter */}
+                        <div className="w-full md:w-48">
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Statuses" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Statuses</SelectItem>
+                                    {STATUS_OPTIONS.map((status) => (
+                                        <SelectItem key={status} value={status}>
+                                            {getStatusLabel(status)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Date Filter Dropdown */}
+                        <div className="w-full md:w-52">
+                            <Select
+                                value={datePreset}
+                                onValueChange={(val) => {
+                                    setDatePreset(val);
+                                    if (val !== 'custom') {
+                                        setStartDate('');
+                                        setEndDate('');
+                                    }
+                                }}
+                            >
+                                <SelectTrigger className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    <SelectValue placeholder="Filter by Date" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Date: All Time</SelectItem>
+                                    <SelectItem value="today">Today</SelectItem>
+                                    <SelectItem value="yesterday">Yesterday</SelectItem>
+                                    <SelectItem value="last7days">Last 7 Days</SelectItem>
+                                    <SelectItem value="last30days">Last 30 Days</SelectItem>
+                                    <SelectItem value="thisMonth">This Month</SelectItem>
+                                    <SelectItem value="custom">Custom Date Range...</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Custom Date Range Pickers (shown when 'custom' selected or dates entered) */}
+                    {(datePreset === 'custom' || startDate || endDate) && (
+                        <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-border">
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="start-date" className="text-xs text-muted-foreground whitespace-nowrap">From:</Label>
+                                <Input
+                                    id="start-date"
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => {
+                                        setStartDate(e.target.value);
+                                        setDatePreset('custom');
+                                    }}
+                                    className="w-40 h-9 text-xs"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="end-date" className="text-xs text-muted-foreground whitespace-nowrap">To:</Label>
+                                <Input
+                                    id="end-date"
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => {
+                                        setEndDate(e.target.value);
+                                        setDatePreset('custom');
+                                    }}
+                                    className="w-40 h-9 text-xs"
+                                />
+                            </div>
+                            {(startDate || endDate) && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setStartDate('');
+                                        setEndDate('');
+                                        setDatePreset('all');
+                                    }}
+                                    className="h-9 text-xs text-muted-foreground hover:text-foreground"
+                                >
+                                    <X className="h-3.5 w-3.5 mr-1" /> Clear Dates
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Filter Summary & Quick Reset */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                        <span>
+                            Showing <strong className="text-foreground">{filteredOrders.length}</strong> of <strong className="text-foreground">{orders.length}</strong> orders
+                        </span>
+                        {hasActiveFilters && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleResetFilters}
+                                className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                                <RotateCcw className="h-3 w-3 mr-1" /> Reset All Filters
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
@@ -275,12 +486,26 @@ const OrderList = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {orders
-                                    .filter((order: any) => {
-                                        if (!searchTerm.trim()) return true;
-                                        return order._id.toLowerCase().includes(searchTerm.toLowerCase());
-                                    })
-                                    .map((order: any) => (
+                                {filteredOrders.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                                            <Package className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                                            <p className="font-medium">No orders found matching your filters</p>
+                                            <p className="text-xs mt-1">Try adjusting the search query, date range, or status filter.</p>
+                                            {hasActiveFilters && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={handleResetFilters}
+                                                    className="mt-3 text-xs"
+                                                >
+                                                    <RotateCcw className="h-3 w-3 mr-1" /> Clear All Filters
+                                                </Button>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filteredOrders.map((order: any) => (
                                         <TableRow key={order._id}>
                                             <TableCell className="font-mono text-xs">{order._id}</TableCell>
 
@@ -394,7 +619,8 @@ const OrderList = () => {
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    ))
+                                )}
                             </TableBody>
                         </Table>
                     </div>
