@@ -62,14 +62,21 @@ interface ChatProviderProps {
 export const ChatProvider = ({ children }: ChatProviderProps) => {
     const { user } = useAuth();
     const [sessionId, setSessionId] = useState<string>('');
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            sender: 'bot',
-            text: "Hi! I'm your AI book assistant. Ask me for book recommendations, search for books, or inquire about our collection!",
-            timestamp: new Date(),
-        },
-    ]);
+    const getInitialMessages = (): Message[] => [{
+        id: '1',
+        sender: 'bot',
+        text: "Hi! I'm your AI book assistant. Ask me for book recommendations, search for books, or inquire about our collection!",
+        timestamp: new Date(),
+    }];
+
+    const getGuestMessages = (): Message[] => [{
+        id: '1',
+        sender: 'bot',
+        text: 'Please login to use the AI assistant.',
+        timestamp: new Date(),
+    }];
+
+    const [messages, setMessages] = useState<Message[]>(getInitialMessages());
     const [orderContext, setOrderContext] = useState<Order[] | null>(null);
     const [currentPage, setCurrentPage] = useState<string>('home');
     const [isLoading, setIsLoading] = useState(false);
@@ -111,9 +118,12 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         if (user) {
             const newSessionId = `chat_${user._id}`;
             setSessionId(newSessionId);
+            setMessages(getInitialMessages());
             fetchHistory();
         } else {
-            clearSession();
+            setMessages(getGuestMessages());
+            setOrderContext(null);
+            setCurrentPage('home');
             setSessionId(`chat_guest_${Date.now()}`);
         }
     }, [user, fetchHistory]);
@@ -175,13 +185,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         if (!text.trim()) return;
 
         if (!user) {
-            const errorMsg: Message = {
-                id: Date.now().toString(),
-                sender: 'bot',
-                text: 'Please login to use the AI assistant.',
-                timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, errorMsg]);
+            // Already showing the login prompt — don't add duplicates
             return;
         }
 
@@ -215,22 +219,22 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
                 }))
             };
 
-            console.log('[ChatContext] Sending message with context:', {
-                sessionId,
-                pageContext: currentPage,
-                hasOrderContext: !!orderContext,
-                orderCount: orderContext?.length || 0,
-                historyLength: payload.chatHistory.length
-            });
+            console.log('Chat request:', text);
 
             const response = await api.post('/api/chat', payload, config);
 
-            // Handle various n8n response formats
+            console.log('Chat response:', response.data);
+
+            // Handle {success, text, bookIds} format (primary) with fallback to legacy formats
             let botText = "I received your message but couldn't parse the response.";
             let botBookIds: string[] | undefined;
             if (typeof response.data === 'string') {
                 botText = response.data;
+            } else if (response.data.success === false) {
+                // Backend explicitly signalled failure
+                botText = response.data.text || response.data.message || "I'm having trouble right now. Please try using the search bar!";
             } else {
+                // success === true or legacy format
                 if (response.data.text) {
                     botText = response.data.text;
                 } else if (response.data.message) {
@@ -282,19 +286,9 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
 
     // Clear session
     const clearSession = () => {
-        setMessages([
-            {
-                id: '1',
-                sender: 'bot',
-                text: "Hi! I'm your AI book assistant. Ask me for book recommendations, search for books, or inquire about our collection!",
-                timestamp: new Date(),
-            },
-        ]);
+        setMessages(user ? getInitialMessages() : getGuestMessages());
         setOrderContext(null);
         setCurrentPage('home');
-        if (sessionId) {
-            // No need to clear local storage as we moved to DB
-        }
         console.log('[ChatContext] Cleared session');
     };
 

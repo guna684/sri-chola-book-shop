@@ -29,8 +29,8 @@ const Index = () => {
         <CategorySection />
         <BestsellerSection />
         <AIFeatureSection />
-        <ThreeShopButton onClick={() => setOpen3D(true)} />
-        {open3D && <ThreeShopModal onClose={() => setOpen3D(false)} />}
+        {/* <ThreeShopButton onClick={() => setOpen3D(true)} />
+        {open3D && <ThreeShopModal onClose={() => setOpen3D(false)} />} */}
       </Layout>
     </>
   );

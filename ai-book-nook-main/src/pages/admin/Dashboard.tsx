@@ -259,10 +259,6 @@ const Dashboard = () => {
                                             <p className="text-sm font-medium text-muted-foreground mb-1">{stat.title}</p>
                                             <h3 className="text-3xl font-bold tracking-tight">{stat.value}</h3>
                                         </div>
-                                        <div className="mt-4 flex items-center text-xs text-green-600 font-medium bg-green-500/10 w-fit px-2 py-1 rounded-full">
-                                            <TrendingUp className="h-3 w-3 mr-1" />
-                                            {t('admin.dashboard.trendingUp')}
-                                        </div>
                                     </div>
                                 </motion.div>
                             ))}

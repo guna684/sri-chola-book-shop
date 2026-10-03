@@ -21,6 +21,7 @@ const ProductEdit = () => {
 
     const [title, setTitle] = useState('');
     const [price, setPrice] = useState(0);
+    const [originalPrice, setOriginalPrice] = useState(0);
     const [image, setImage] = useState('');
     const [author, setAuthor] = useState('');
     const [category, setCategory] = useState('');
@@ -108,6 +109,7 @@ const ProductEdit = () => {
                 setTitle(data.title);
                 setAuthor(data.author);
                 setPrice(data.price);
+                setOriginalPrice(data.originalPrice || 0);
                 setDescription(data.description);
                 setCategory(data.category);
                 setImage(data.coverImage); // Backend uses 'coverImage'
@@ -228,6 +230,7 @@ const ProductEdit = () => {
                 title,
                 author,
                 price,
+                originalPrice,
                 description,
                 category,
                 coverImage: uploadedImagePath || image, // Prioritize uploaded image
@@ -321,7 +324,7 @@ const ProductEdit = () => {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="price">{t('admin.products.form.price')} (₹)</Label>
                                 <Input
@@ -330,6 +333,15 @@ const ProductEdit = () => {
                                     value={price}
                                     onChange={(e) => setPrice(Number(e.target.value))}
                                     required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="originalPrice">Original Price (₹)</Label>
+                                <Input
+                                    id="originalPrice"
+                                    type="number"
+                                    value={originalPrice}
+                                    onChange={(e) => setOriginalPrice(Number(e.target.value))}
                                 />
                             </div>
                             <div className="space-y-2">

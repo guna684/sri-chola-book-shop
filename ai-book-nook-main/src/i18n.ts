@@ -14,7 +14,7 @@ i18n
             },
             ta: {
                 translation: ta,
-            },
+            },99
         },
         fallbackLng: 'en',
         interpolation: {

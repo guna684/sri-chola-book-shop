@@ -65,6 +65,23 @@ const CancellationChargePaymentModal = ({
     const handlePayOnline = async () => {
         setLoading(true);
         try {
+            // Load Razorpay script if not already loaded
+            if (!window.Razorpay) {
+                const loadRazorpayScript = () => new Promise((resolve) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                    script.onload = () => resolve(true);
+                    script.onerror = () => resolve(false);
+                    document.body.appendChild(script);
+                });
+                const isLoaded = await loadRazorpayScript();
+                if (!isLoaded) {
+                    toast.error('Razorpay SDK failed to load. Are you online?');
+                    setLoading(false);
+                    return;
+                }
+            }
+
             const { data: session } = await api.post(
                 '/api/payment/cancel-charge-session',
                 { orderId },

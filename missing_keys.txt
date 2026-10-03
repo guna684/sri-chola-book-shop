@@ -1,0 +1,4 @@
+Total keys in EN: 823
+Total keys in TA: 823
+
+No missing keys in TA.

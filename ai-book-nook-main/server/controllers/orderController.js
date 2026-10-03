@@ -374,15 +374,14 @@ const getCODCancellationPreview = asyncHandler(async (req, res) => {
     }
 
     const orderTotal = order.totalPrice;
-    const codCharge = computeCODCharge(orderTotal);
 
     res.json({
         paymentType: 'COD',
         orderTotal,
-        codHandlingCharge: COD_CANCELLATION_CHARGE_FIXED,
-        cancellationCharge: codCharge,
-        totalCharges: codCharge,
-        message: `This order was placed using Cash on Delivery. If you cancel now, a cancellation charge of ₹${codCharge} will be applied to your account.`,
+        codHandlingCharge: 0,
+        cancellationCharge: 0,
+        totalCharges: 0,
+        message: `This order was placed using Cash on Delivery. If you cancel now, an admin will review the request and assess a cancellation charge. Once assessed, you will be able to pay it online.`,
     });
 });
 
@@ -503,14 +502,11 @@ const initiateCODCancellation = asyncHandler(async (req, res) => {
         res.status(400); throw new Error(`Cannot initiate cancellation for an order that is ${order.status}`);
     }
 
-    const codCharge = computeCODCharge(order.totalPrice);
-    const dueDate = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours from now
-
     order.status = 'Cancellation Pending';
     order.cancellationType = 'COD';
-    order.cancellationCharge = codCharge;
+    order.cancellationCharge = null; // Admin sets this later
     order.cancellationChargeStatus = 'Pending';
-    order.cancellationDueDate = dueDate;
+    order.cancellationDueDate = null; // Admin sets this later
     order.cancellationRequestedAt = new Date();
     order.cancellationReason = 'User Initiated (COD)';
 
@@ -518,10 +514,7 @@ const initiateCODCancellation = asyncHandler(async (req, res) => {
 
     res.json({
         ...updatedOrder.toObject(),
-        // Extra preview data for frontend modal
-        codHandlingCharge: COD_CANCELLATION_CHARGE_FIXED,
-        dueDate,
-        cancellationCharge: codCharge,
+        message: 'Cancellation initiated. Awaiting admin charge assessment.',
     });
 });
 

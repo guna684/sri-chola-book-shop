@@ -209,23 +209,101 @@ ${bookList}
         history.pop(); // Ensure it ends with a model message if there are user messages without responses
     }
 
+    // --- Gemini AI Call ---
+    console.log('Chat request:', message);
+
+    // Helper: local fallback for category/general queries when AI is unavailable
+    const localGeneralFallback = async (userMessage) => {
+        const lowerMsg = userMessage.toLowerCase();
+
+        // Greeting
+        if (/^(hi|hello|hey|good\s*(morning|evening|afternoon)|namaste)/i.test(lowerMsg.trim())) {
+            return { text: "Hello! Welcome to Sri Chola Book Shop 😊 I can help you find books by title, author, category, or price. What are you looking for today?", bookIds: [] };
+        }
+
+        // Category keywords
+        const categoryMap = {
+            biography: ['biography', 'biographies', 'memoir', 'life story'],
+            fiction: ['fiction', 'novel', 'story', 'stories'],
+            'non-fiction': ['non fiction', 'nonfiction', 'non-fiction'],
+            children: ['children', "children's", 'kids', 'child'],
+            mystery: ['mystery', 'thriller', 'detective', 'crime'],
+            science: ['science', 'scientific', 'physics', 'chemistry', 'biology'],
+            history: ['history', 'historical', 'ancient', 'medieval'],
+            romance: ['romance', 'romantic', 'love story'],
+            fantasy: ['fantasy', 'magic', 'dragon', 'wizard'],
+            'self-help': ['self help', 'self-help', 'motivation', 'motivational', 'personal development'],
+        };
+
+        for (const [cat, keywords] of Object.entries(categoryMap)) {
+            if (keywords.some(k => lowerMsg.includes(k))) {
+                const books = await Book.find({ category: { $regex: cat, $options: 'i' }, stock: { $gt: 0 } }).limit(5);
+                if (books.length > 0) {
+                    const results = books.map(b =>
+                        `📚 **${b.title}**\n   👤 Author: ${b.author}\n   💰 Price: ₹${b.price}`
+                    ).join('\n\n');
+                    const bookIds = books.map(b => b._id.toString());
+                    return { text: `Here are some **${cat}** books available in our store:\n\n${results}`, bookIds };
+                }
+            }
+        }
+
+        // Author search
+        const authorMatch = lowerMsg.match(/books?\s+by\s+([a-z\s]+)/i);
+        if (authorMatch) {
+            const authorName = authorMatch[1].trim();
+            const books = await Book.find({ author: { $regex: authorName, $options: 'i' }, stock: { $gt: 0 } }).limit(5);
+            if (books.length > 0) {
+                const results = books.map(b =>
+                    `📚 **${b.title}**\n   👤 Author: ${b.author}\n   💰 Price: ₹${b.price}`
+                ).join('\n\n');
+                const bookIds = books.map(b => b._id.toString());
+                return { text: `Here are books by **${authorName}** in our collection:\n\n${results}`, bookIds };
+            }
+        }
+
+        // Default: show featured books
+        const featured = await Book.find({ stock: { $gt: 0 } }).sort({ soldCount: -1 }).limit(5);
+        if (featured.length > 0) {
+            const results = featured.map(b =>
+                `📚 **${b.title}**\n   👤 Author: ${b.author}\n   💰 Price: ₹${b.price}\n   🔖 Category: ${b.category}`
+            ).join('\n\n');
+            const bookIds = featured.map(b => b._id.toString());
+            return {
+                text: `Here are some popular books from our collection:\n\n${results}\n\n💡 You can also search by category, author, title, or price (e.g. "books under ₹300").`,
+                bookIds
+            };
+        }
+
+        return { text: "I'm here to help you find books! Try asking for a specific category, author, or title. You can also say 'show books under ₹300'.", bookIds: [] };
+    };
+
     try {
         if (!process.env.GEMINI_API_KEY) {
-            return res.json({ text: "The Gemini AI is currently unavailable (Missing API Key). Please browse our featured books or use the search bar." });
+            const fallback = await localGeneralFallback(message);
+            console.log('Chat response (no API key fallback):', fallback.text.slice(0, 80));
+            return res.json({ success: true, text: fallback.text, bookIds: fallback.bookIds });
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        // gemini-2.0-flash is the correct current model name
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
+            model: "gemini-2.0-flash",
             systemInstruction: systemPrompt
         });
 
-        const chat = model.startChat({
-            history: history,
-        });
-
+        const chat = model.startChat({ history });
         const result = await chat.sendMessage(message);
-        let responseText = result.response.text();
+
+        // Safe extraction using optional chaining
+        let responseText =
+            result?.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            result?.response?.text?.() ||
+            null;
+
+        if (!responseText) {
+            throw new Error('Empty response from Gemini');
+        }
 
         let bookIds = [];
         const idMatch = responseText.match(/RECOMMENDED_IDS:\s*([a-fA-F0-9,\s]+)/i);
@@ -234,26 +312,46 @@ ${bookList}
             responseText = responseText.replace(/RECOMMENDED_IDS:\s*([a-fA-F0-9,\s]+)/i, '').trim();
         }
 
-        // Save to Chat History if userId is available
         if (req.user && req.user._id) {
             try {
                 await ChatHistory.create({
                     userId: req.user._id,
-                    message: message,
+                    message,
                     response: responseText,
                     timestamp: new Date()
                 });
             } catch (historyError) {
                 console.error('Failed to save chat history:', historyError);
-                // Don't fail the main request if history fails to save
             }
         }
 
-        res.json({ text: responseText, bookIds: bookIds });
+        console.log('Chat response (Gemini):', responseText.slice(0, 80));
+        res.json({ success: true, text: responseText, bookIds });
 
     } catch (error) {
-        console.error('Gemini AI Error Details:', error);
-        res.json({ text: "I'm having trouble connecting to the AI service right now. Please try again in a moment, or use the search feature to find books!" });
+        console.error('Gemini AI Error — falling back to local handler. Reason:', error?.message || error);
+
+        try {
+            const fallback = await localGeneralFallback(message);
+
+            // Save fallback to history too
+            if (req.user && req.user._id) {
+                try {
+                    await ChatHistory.create({
+                        userId: req.user._id,
+                        message,
+                        response: fallback.text,
+                        timestamp: new Date()
+                    });
+                } catch (_) { /* ignore history errors */ }
+            }
+
+            console.log('Chat response (local fallback):', fallback.text.slice(0, 80));
+            res.json({ success: true, text: fallback.text, bookIds: fallback.bookIds });
+        } catch (fallbackError) {
+            console.error('Local fallback also failed:', fallbackError);
+            res.json({ success: false, text: "I'm having trouble right now. Please try again in a moment or use the search bar to find books!" });
+        }
     }
 });
 

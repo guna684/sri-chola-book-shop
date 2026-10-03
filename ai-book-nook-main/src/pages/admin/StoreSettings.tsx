@@ -27,7 +27,7 @@ const StoreSettings = () => {
                     setLowStockLimit(data.lowStockLimit);
                 }
             } catch (error) {
-                toast.error(t('admin.settings.messages.fetchError'));
+                toast.error(t('admin.products.settings.messages.fetchError'));
             } finally {
                 setLoading(false);
             }
@@ -38,7 +38,7 @@ const StoreSettings = () => {
 
     const handleSave = async () => {
         if (lowStockLimit < 0) {
-            toast.error(t('admin.settings.messages.negativeError'));
+            toast.error(t('admin.products.settings.messages.negativeError'));
             return;
         }
 
@@ -46,9 +46,9 @@ const StoreSettings = () => {
             setSaving(true);
             const config = { headers: { Authorization: `Bearer ${user?.token}` } };
             await api.put('/api/settings', { lowStockLimit }, config);
-            toast.success(t('admin.settings.messages.saveSuccess'));
+            toast.success(t('admin.products.settings.messages.saveSuccess'));
         } catch (error) {
-            toast.error(t('admin.settings.messages.saveError'));
+            toast.error(t('admin.products.settings.messages.saveError'));
         } finally {
             setSaving(false);
         }
@@ -67,7 +67,7 @@ const StoreSettings = () => {
     return (
         <AdminLayout>
             <Helmet>
-                <title>{t('admin.settings.title')} | Admin Dashboard</title>
+                <title>{t('admin.products.settings.title')} | Admin Dashboard</title>
             </Helmet>
 
             <div className="w-full">
@@ -77,22 +77,22 @@ const StoreSettings = () => {
                     className="mb-8"
                 >
                     <h1 className="text-3xl font-bold font-serif text-foreground mb-2 flex items-center gap-3">
-                        <Settings className="h-8 w-8 text-primary" /> {t('admin.settings.title')}
+                        <Settings className="h-8 w-8 text-primary" /> {t('admin.products.settings.title')}
                     </h1>
-                    <p className="text-muted-foreground">{t('admin.settings.subtitle')}</p>
+                    <p className="text-muted-foreground">{t('admin.products.settings.subtitle')}</p>
                 </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-xl pb-2 border-b border-border">{t('admin.settings.inventoryAlerts')}</CardTitle>
+                                <CardTitle className="text-xl pb-2 border-b border-border">{t('admin.products.settings.inventoryAlerts')}</CardTitle>
                             </CardHeader>
                             <CardContent className="pt-6 space-y-6">
                                 <div className="space-y-3">
-                                    <Label htmlFor="lowStockLimit" className="text-base font-semibold">{t('admin.settings.lowStockLimit')}</Label>
+                                    <Label htmlFor="lowStockLimit" className="text-base font-semibold">{t('admin.products.settings.lowStockLimit')}</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        {t('admin.settings.lowStockDesc')}
+                                        {t('admin.products.settings.lowStockDesc')}
                                     </p>
                                     <div className="flex items-center gap-4">
                                         <Input
@@ -103,14 +103,14 @@ const StoreSettings = () => {
                                             value={lowStockLimit}
                                             onChange={(e) => setLowStockLimit(parseInt(e.target.value) || 0)}
                                         />
-                                        <span className="text-muted-foreground">{t('admin.settings.units')}</span>
+                                        <span className="text-muted-foreground">{t('admin.products.settings.units')}</span>
                                     </div>
                                 </div>
 
                                 <div className="pt-4 flex justify-end">
                                     <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
                                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                        {t('admin.settings.save')}
+                                        {t('admin.products.settings.save')}
                                     </Button>
                                 </div>
                             </CardContent>

@@ -388,27 +388,37 @@ const Orders = () => {
                                             <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-                                                    Cancellation Pending — Payment Required
+                                                    Cancellation Pending — {order.cancellationCharge != null ? "Payment Required" : "Awaiting Verification"}
                                                 </p>
-                                                <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                                                    Charge: <strong>₹{order.cancellationCharge?.toFixed(2)}</strong>
-                                                    {order.cancellationDueDate && (
-                                                        <> &nbsp;·&nbsp; <Clock className="h-3 w-3 inline-block mb-0.5" /> {dueDateLabel(order.cancellationDueDate)}</>
-                                                    )}
-                                                </p>
-                                                <p className="text-xs text-amber-600 mt-1">
-                                                    If not paid in time, your order will automatically resume delivery.
-                                                </p>
+                                                {order.cancellationCharge != null ? (
+                                                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                                                        Charge: <strong>₹{order.cancellationCharge?.toFixed(2)}</strong>
+                                                        {order.cancellationDueDate && (
+                                                            <> &nbsp;·&nbsp; <Clock className="h-3 w-3 inline-block mb-0.5" /> {dueDateLabel(order.cancellationDueDate)}</>
+                                                        )}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                                                        Admin will review your request and update the cancellation charge amount shortly.
+                                                    </p>
+                                                )}
+                                                {order.cancellationCharge != null && (
+                                                    <p className="text-xs text-amber-600 mt-1">
+                                                        If not paid in time, your order will automatically resume delivery.
+                                                    </p>
+                                                )}
                                             </div>
-                                            <div className="flex flex-col gap-1.5">
-                                                <Button
-                                                    size="sm"
-                                                    className="bg-amber-500 hover:bg-amber-600 text-white text-xs"
-                                                    onClick={() => openPayModalForPendingOrder(order)}
-                                                >
-                                                    Pay Now
-                                                </Button>
-                                            </div>
+                                            {order.cancellationCharge != null && (
+                                                <div className="flex flex-col gap-1.5">
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-amber-500 hover:bg-amber-600 text-white text-xs"
+                                                        onClick={() => openPayModalForPendingOrder(order)}
+                                                    >
+                                                        Pay Now
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
