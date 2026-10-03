@@ -158,4 +158,39 @@ Step 3: Vercel (Frontend)
   [ ] Environment Variables:
       - VITE_API_URL = (your Render live URL, e.g. https://your-api.onrender.com)
   [ ] Deploy clicked -> Website is live!
+
+
 ================================================================================
+5. HOW TO EDIT / CHANGE YOUR VERCEL DOMAIN NAME FOR FREE (100% FREE)
+================================================================================
+Yes, you can edit or change your domain on Vercel at any time completely free of cost!
+
+METHOD 1: Changing the Free Vercel Subdomain (*.vercel.app)
+-----------------------------------------------------------
+1. Go to https://vercel.com/dashboard and log in.
+2. Click on your project ("sri-chola-book-shop").
+3. Click on "Settings" in the top navigation bar.
+4. On the left sidebar, click on "Domains".
+5. You will see your current domain (e.g. sri-chola-book-shop.vercel.app).
+6. Click "Edit" next to the domain name.
+7. Type your new desired name (e.g. srichola-bookstore.vercel.app).
+   - If that name is not taken, Vercel will save it immediately!
+   - You can also click "Add" to have multiple domains pointing to the same site.
+8. Free automatic SSL/HTTPS will be issued within a few seconds!
+
+NOTE ON BACKEND (RENDER):
+- You DO NOT need to change your backend code!
+- Your server (server/index.js) already has:
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+  which means ANY .vercel.app domain is automatically accepted!
+
+METHOD 2: Connecting a Custom Domain (e.g. sricholabooks.com)
+--------------------------------------------------------------
+- If you purchase a domain from Namecheap, GoDaddy, or Hostinger:
+  1. In Vercel -> Settings -> Domains -> Click "Add".
+  2. Type your domain name (e.g., sricholabooks.com).
+  3. Vercel gives you 2 DNS records (A record or CNAME).
+  4. Paste those into your domain registrar's DNS settings.
+  5. Vercel charges ZERO ($0) fees for hosting custom domains with free SSL!
+================================================================================
+
