@@ -33,7 +33,8 @@
         "cart": "Cart",
         "wishlist": "Wishlist",
         "addToCart": "Add to Cart",
-        "by": "by"
+        "by": "by",
+        "loading": "Loading..."
     },
     "hero": {
         "aiPowered": "AI-Powered Recommendations",
@@ -234,7 +235,8 @@
             "language": "Language",
             "published": "Published",
             "category": "Category",
-            "genre": "Genre"
+            "genre": "Genre",
+            "noDetails": "No additional details available."
         },
         "reviews": {
             "title": "Customer Reviews",
@@ -731,7 +733,9 @@
                 "delivered": "Delivered",
                 "cancelled": "Cancelled",
                 "returned": "Returned",
-                "refunded": "Refunded"
+                "refunded": "Refunded",
+                "paid": "Paid",
+                "waived": "Waived"
             },
             "codCharge": {
                 "manage": "Manage COD Cancellation Charge",
@@ -821,7 +825,8 @@
                 "date": "DATE",
                 "status": "STATUS",
                 "actions": "ACTIONS"
-            }
+            },
+            "updateError": "Failed to update message status"
         },
         "banner": {
             "title": "Banner Management",
@@ -931,7 +936,8 @@
                 "inactive": "This promo code is currently inactive",
                 "expired": "This promo code has expired",
                 "limitReached": "Usage limit reached"
-            }
+            },
+            "deactivateError": "Failed to deactivate promo code"
         },
         "settings": {
             "title": "Store Settings",
