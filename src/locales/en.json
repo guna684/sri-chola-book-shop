@@ -81,7 +81,10 @@
         "biography": "Biography",
         "childrens": "Children's",
         "technology": "Technology",
-        "history": "History"
+        "history": "History",
+        "self-development": "Self-Development",
+        "science": "Science",
+        "agriculture": "Agriculture"
     },
     "categorySection": {
         "title": "Browse by Category",
@@ -398,7 +401,9 @@
             "Business": "Business",
             "Entertainment": "Entertainment",
             "Art": "Art",
-            "Sports": "Sports"
+            "Sports": "Sports",
+            "Self-Development": "Self-Development",
+            "Agriculture": "Agriculture"
         }
     },
     "checkout": {
@@ -906,6 +911,21 @@
                 "inactive": "This promo code is currently inactive",
                 "expired": "This promo code has expired",
                 "limitReached": "Usage limit reached"
+            }
+        },
+        "settings": {
+            "title": "Store Settings",
+            "subtitle": "Manage your store's global configuration",
+            "inventoryAlerts": "Inventory Alerts",
+            "lowStockLimit": "Low Stock Alert Threshold",
+            "lowStockDesc": "Set the minimum stock threshold. Books with stock equal to or less than this value will appear in low stock alerts.",
+            "units": "Units",
+            "save": "Save Settings",
+            "messages": {
+                "fetchError": "Failed to load settings",
+                "negativeError": "Stock threshold cannot be negative",
+                "saveSuccess": "Settings saved successfully",
+                "saveError": "Failed to save settings"
             }
         }
     },
