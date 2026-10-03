@@ -7,11 +7,13 @@ import connectDB from './config/db.js';
 dotenv.config();
 
 
-connectDB();
-
-// Start the COD cancellation charge auto-expiry scheduler
 import { startCancellationScheduler } from './cancellationScheduler.js';
-startCancellationScheduler();
+
+connectDB().then(() => {
+    startCancellationScheduler();
+}).catch((err) => {
+    console.error('Failed to initialize database:', err.message);
+});
 
 const app = express();
 
