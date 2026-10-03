@@ -71,7 +71,7 @@ const ProductEdit = () => {
                 case 'language':
                     setLanguage(value);
                     break;
-                case 'published date':
+                case 'published date': {
                     let dateVal = value;
                     if (dateVal.length === 4) dateVal += '-01-01';
                     else if (dateVal.length === 7) dateVal += '-01';
@@ -81,6 +81,7 @@ const ProductEdit = () => {
                         setPublishedDate(dateVal);
                     }
                     break;
+                }
                 case 'publisher':
                     setPublisher(value);
                     break;

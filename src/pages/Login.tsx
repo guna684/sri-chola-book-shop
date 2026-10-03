@@ -25,6 +25,16 @@ const Login = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  useEffect(() => {
+    if (user) {
+      if (user.isAdmin) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [user, navigate, t]);
+
   // Simple error boundary
   if (!login || !navigate) {
     return (
@@ -36,16 +46,6 @@ const Login = () => {
       </div>
     );
   }
-
-  useEffect(() => {
-    if (user) {
-      if (user.isAdmin) {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
-    }
-  }, [user, navigate, t]);
 
   const handleGoogleAutofill = () => {
     // In a real application, this would use the Google Identity Services SDK

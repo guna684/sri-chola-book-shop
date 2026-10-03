@@ -14,6 +14,7 @@ import BookDetail from "./pages/BookDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
 import Categories from "./pages/Categories";
 import NotFound from "./pages/NotFound";
 import Orders from "./pages/Orders";
@@ -40,7 +41,6 @@ import PromoCodeList from "./pages/admin/PromoCodeList";
 import BannerManagement from "./pages/admin/BannerManagement";
 import RefundManagement from "./pages/admin/RefundManagement";
 import DeliveryPriceManagement from "./pages/admin/DeliveryPriceManagement";
-import MyOrders from "./pages/MyOrders";
 import QuickLinksManagement from "./pages/admin/QuickLinksManagement";
 import StoreSettings from "./pages/admin/StoreSettings";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
@@ -65,6 +65,7 @@ const App = () => (
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/admin-login" element={<AdminLogin />} />
                     <Route path="/forgotpassword" element={<ForgotPassword />} />
                     <Route path="/resetpassword/:token" element={<ResetPassword />} />
                     <Route path="/orders" element={<Orders />} />
@@ -86,7 +87,6 @@ const App = () => (
                     <Route path="/admin/delivery-pricing" element={<ProtectedAdminRoute><DeliveryPriceManagement /></ProtectedAdminRoute>} />
                     <Route path="/admin/quick-links" element={<ProtectedAdminRoute><QuickLinksManagement /></ProtectedAdminRoute>} />
                     <Route path="/admin/settings" element={<ProtectedAdminRoute><StoreSettings /></ProtectedAdminRoute>} />
-                    <Route path="/orders" element={<MyOrders />} />
                     <Route path="/categories" element={<Categories />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/about" element={<About />} />
